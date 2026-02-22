@@ -1,6 +1,10 @@
-[package]
-name = "proyecto1"
-version = "0.1.0"
-edition = "2024"
+# [package]
+# name = "proyecto1"
+# version = "0.1.0"
+# edition = "2024"
 
-[dependencies]
+# [dependencies]
+
+[workspace]
+members = ["servidor", "cliente"]
+resolver = "3"

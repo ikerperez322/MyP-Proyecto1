@@ -3,5 +3,9 @@
 version = 4
 
 [[package]]
-name = "proyecto1"
+name = "cliente"
+version = "0.1.0"
+
+[[package]]
+name = "servidor"
 version = "0.1.0"
