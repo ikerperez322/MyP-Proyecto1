@@ -3,8 +3,8 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind("127.0.0.1:8080").await?;
-    println!("Servidor corriendo en 127.0.0.1:8080");
+    let listener = TcpListener::bind("0.0.0.0:8080").await?;
+    println!("Servidor corriendo en 0.0.0.0:8080");
 
     loop {
         let (socket, addr) = listener.accept().await?;

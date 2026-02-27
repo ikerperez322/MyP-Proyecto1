@@ -1,0 +1,16 @@
+services:
+  servidor:
+    build:
+      context: .
+      dockerfile: servidor/Dockerfile
+    ports:
+      - "8080:8080"
+
+  cliente:
+    build:
+      context: .
+      dockerfile: cliente/Dockerfile
+    depends_on:
+      - servidor
+    stdin_open: true
+    tty: true
