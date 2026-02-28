@@ -1,24 +1,38 @@
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use std::env;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind("0.0.0.0:8080").await?;
-    println!("Servidor corriendo en 0.0.0.0:8080");
+async fn main() -> Result<(), Box<dyn std::error::Error>>{
+
+    let args: Vec<String> = env::args().collect();
+    let puerto = args.get(1).expect("Se debe de pasar un puerto.");
+
+    correr_servidor(puerto).await?;
+
+    Ok(())
+}
+
+async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Error>>{
+
+    let direccion = format!("127.0.0.1:{}", puerto);
+    
+    let listener = TcpListener::bind(direccion.clone()).await?;
+    println!("Servidor corriendo en: {}", direccion);
 
     loop {
         let (socket, addr) = listener.accept().await?;
         println!("Nueva conexión desde {}", addr);
 
         tokio::spawn(async move {
-            if let Err(e) = handle_connection(socket).await {
+            if let Err(e) = maneja_conexion(socket).await {
                 eprintln!("Error en conexión {}: {}", addr, e);
             }
         });
     }
 }
 
-async fn handle_connection(socket: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
+async fn maneja_conexion(socket: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
     let (reader, mut writer) = socket.into_split();
 
     let mut reader = BufReader::new(reader);
@@ -41,4 +55,14 @@ async fn handle_connection(socket: TcpStream) -> Result<(), Box<dyn std::error::
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_prueba() {
+        
+    }
+    
 }
