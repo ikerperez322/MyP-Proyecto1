@@ -50,7 +50,7 @@ async fn maneja_conexion(socket: TcpStream) -> Result<(), Box<dyn std::error::Er
 
         println!("Recibido: {}", linea.trim());
 
-        let respuesta = format!("Echo: {}\n", linea.trim());
+        let respuesta = format!("{}\n", linea.trim());
         writer.write_all(respuesta.as_bytes()).await?;
     }
 

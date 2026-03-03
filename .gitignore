@@ -1,1 +1,5 @@
 /target
+
+/docker-compose.yml
+/cliente/Dockerfile
+/servidor/Dockerfile
