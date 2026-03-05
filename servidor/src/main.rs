@@ -1,18 +1,35 @@
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use std::env;
+// use std::fmt::Error;
+pub mod usuario;
+pub mod cuarto;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     let args: Vec<String> = env::args().collect();
-    let puerto = args.get(1).expect("Se debe de pasar un puerto.");
+    // let puerto = args.get(1).expect("Se debe de pasar un puerto.");
+    let puerto = match args.get(1) {
+        Some(p) => p,
+        None => {
+            return Err("Se debe de pasar un número de puerto como argumento.".into());
+        }
+    };
 
+    let _: u16 = match puerto.parse() {
+        Ok(num) => num,
+        Err(_) => {
+            return Err("El puerto debe ser un número.".into());
+        }
+    };
+    
     correr_servidor(puerto).await?;
 
     Ok(())
 }
 
+//corre el servidor y crea un hilo cada que recibe una nueva conexión
 async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Error>>{
 
     let direccion = format!("127.0.0.1:{}", puerto);
@@ -21,17 +38,24 @@ async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Error>>
     println!("Servidor corriendo en: {}", direccion);
 
     loop {
-        let (socket, addr) = listener.accept().await?;
-        println!("Nueva conexión desde {}", addr);
-
-        tokio::spawn(async move {
-            if let Err(e) = maneja_conexion(socket).await {
-                eprintln!("Error en conexión {}: {}", addr, e);
-            }
-        });
+        match listener.accept().await {
+            Ok((socket, direccion)) => {
+                println!("Nueva conexión desde {}", direccion);
+                tokio::spawn(async move {
+                    if let Err(e) = maneja_conexion(socket).await {
+                        eprintln!("Error en conexión {}: {}", direccion, e);
+                    } 
+                });
+            },
+            Err(e) => {
+                eprintln!("Error aceptando la conexión: {}", e);
+                continue;
+            }   
+        }
     }
 }
 
+//Función que va manejando la conexión de cada cliente que se conecta en el servidor
 async fn maneja_conexion(socket: TcpStream) -> Result<(), Box<dyn std::error::Error>> {
     let (reader, mut writer) = socket.into_split();
 

@@ -2,7 +2,7 @@ use tokio::net::TcpStream;
 use tokio::io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use std::env;
-use common::{Identificador, deserializar_identificador};
+// use common::{Ident};
 
 
 #[tokio::main]
@@ -11,7 +11,7 @@ async fn main() -> Result<(), Box<dyn::std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let direccion_ip = args.get(1).expect("Se debe pasar una dirección IP.");
     let puerto = args.get(2).expect("Se debe pasar un puerto");
-
+    
     corre_cliente(direccion_ip, puerto).await?;
     
     Ok(())
@@ -64,6 +64,9 @@ async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<dyn s
     let usuario_string: String = deserializar_identificador(usuario)?;
     
     escritor.write_all(usuario_string.as_bytes()).await.unwrap();
+
+    // escritor.write_all(usuario_string.as_bytes());
+    
     
     let entrada_estandar = io::stdin();
     let mut input = BufReader::new(entrada_estandar);

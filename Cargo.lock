@@ -193,6 +193,7 @@ dependencies = [
 name = "servidor"
 version = "0.1.0"
 dependencies = [
+ "common",
  "tokio",
 ]
 

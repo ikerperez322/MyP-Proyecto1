@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
-
+pub mod protocolo;
+pub mod status;
+pub mod nombres;
+pub mod maneja_json;
 
 #[derive(Serialize, Deserialize)]
 pub struct Identificador {
@@ -8,8 +10,3 @@ pub struct Identificador {
     pub username: String,
 }
 
-pub fn deserializar_identificador(usuario: Identificador) -> Result<String> {
-
-    serde_json::to_string(&usuario)
-    
-}
