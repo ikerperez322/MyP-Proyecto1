@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::env;
 use std::sync::{Arc};
 
-
+use common::maneja_json;
 use crate::estado_chat::EstadoChat;
 // use std::fmt::Error;
 pub mod usuario;
@@ -81,13 +81,16 @@ async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Error>>
     }
 }
 
-//Función que va manejando la conexión de cada cliente que se conecta en el servidor
+//
+//
+//Función que va manejando la conexión de cada cliente que se conecta en el servidor URGENTE REFACTORIZACION
 async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Result<(), Box<dyn std::error::Error>> {
     let (reader, mut writer) = socket.into_split();
 
     let mut reader = BufReader::new(reader);
     let mut linea = String::new();
 
+    
     loop {
         linea.clear();
 
@@ -98,16 +101,38 @@ async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Result<(
             break;
         }
 
+        let msg = match maneja_json::serializa_json_servidor(&linea) {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!("JSON inválido: {}", e);
+                continue;
+            }
+        };
+
+    
+        let resultado = manejador_mensajes::procesa_mensaje(msg, estado.clone()).await;
+
+        let resultado_string = match maneja_json::deserializa_json_cliente(resultado) {
+            Ok(s) => s,
+            Err(e) => {
+                continue;
+            }
+        };
+        
+        writer.write_all(resultado_string.as_bytes()).await;
+        
         println!("Recibido: {}", linea.trim());
 
         //aqui va a ir una condicion que le diga al servidor que le mandaron para saber como debe responder
         {
-            let mut usuarios = estado.diccionario_usuarios.write();
-            let mut cuartos = estado.diccionario_cuartos.write();
+            // let mut usuarios = estado.diccionario_usuarios.write();
+            // let mut cuartos = estado.diccionario_cuartos.write();
     
         }
         
+        
 
+        
         let respuesta = format!("{}\n", linea.trim());
         writer.write_all(respuesta.as_bytes()).await?;
     }

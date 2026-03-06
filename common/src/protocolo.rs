@@ -13,12 +13,6 @@ pub enum MensajesServidor {
     Identify {
         username: NombreUsuario,
     },
-    #[serde(rename = "RESPONSE")]
-    Response {
-        operation: String,
-        result: String,
-        extra: String,
-    },
     #[serde(rename = "NEW_USER")]
     NewUser {
         username: NombreUsuario,
@@ -125,6 +119,12 @@ pub enum MensajesServidor {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum MensajesCliente {
+    #[serde(rename = "RESPONSE")]
+    Response {
+        operation: String,
+        result: String,
+        extra: String,
+    },
     #[serde(rename = "NEW_USER")]
     NewUser {
         username: NombreUsuario,

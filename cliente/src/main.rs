@@ -1,4 +1,4 @@
-use common::maneja_json::deserializa_json_servidor;
+use common::maneja_json;
 use common::protocolo::MensajesServidor;
 use tokio::net::TcpStream;
 use tokio::io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -99,7 +99,7 @@ async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<dyn s
     }
     
     let identificador: MensajesServidor = identificarse(linea.trim());
-    let mut json: String = deserializa_json_servidor(identificador)?;
+    let mut json: String = maneja_json::deserializa_json_servidor(identificador)?;
     json.push('\n');
     escritor.write_all(json.as_bytes()).await?;
 
