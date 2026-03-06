@@ -12,8 +12,6 @@ pub async fn leer_servidor(lector: OwnedReadHalf) -> Result<(), Box<dyn std::err
 
     loop {
         linea.clear();
-
-        // let bytes = lector.read_line(&mut linea).await?;
         
         if lector.read_line(&mut linea).await? == 0 {
             println!("Servidor desconectado");
