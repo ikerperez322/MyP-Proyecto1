@@ -1,17 +1,20 @@
-use tokio::net::{TcpListener, TcpStream};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::sync::RwLock;
-use std::collections::HashMap;
-use std::env;
-use std::sync::{Arc};
+// use tokio::net::{TcpListener, TcpStream};
+// use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+// // use tokio::sync::RwLock;
+// use std::collections::HashMap;
+// // use std::sync::{Arc};
 
-use common::maneja_json;
-use crate::estado_chat::EstadoChat;
-// use std::fmt::Error;
+// use common::maneja_json;
+// use crate::estado_chat::EstadoChat;
+// // use std::fmt::Error;
+use std::env;
+pub mod servidor;
 pub mod usuario;
 pub mod cuarto;
 pub mod estado_chat;
 pub mod manejador_mensajes;
+pub mod conexion;
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
@@ -32,113 +35,113 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         }
     };
     
-    correr_servidor(puerto).await?;
+    servidor::correr_servidor(puerto).await?;
 
     Ok(())
 }
 
-//corre el servidor y crea un hilo cada que recibe una nueva conexión
-async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Error>>{
+// //corre el servidor y crea un hilo cada que recibe una nueva conexión
+// async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Error>>{
 
-    let direccion = format!("127.0.0.1:{}", puerto);
+//     let direccion = format!("127.0.0.1:{}", puerto);
     
-    let listener = TcpListener::bind(direccion.clone()).await?;
-    println!("Servidor corriendo en: {}", direccion);
+//     let listener = TcpListener::bind(direccion.clone()).await?;
+//     println!("Servidor corriendo en: {}", direccion);
 
-    //variable con que contiene el diccionario de usuarios y el diccionario de cuartos existentes para pasarselo a cada task de tokio
-    let estado = Arc::new(EstadoChat {
-        diccionario_usuarios: RwLock::new(HashMap::new()),
-        diccionario_cuartos: RwLock::new(HashMap::new()),
-    });
+//     //variable con que contiene el diccionario de usuarios y el diccionario de cuartos existentes para pasarselo a cada task de tokio
+//     let estado = Arc::new(EstadoChat {
+//         diccionario_usuarios: RwLock::new(HashMap::new()),
+//         diccionario_cuartos: RwLock::new(HashMap::new()),
+//     });
     
-    loop {
+//     loop {
 
-        let (socket, direccion) = listener.accept().await?;
-        println!("Nueva conexión desde {}", direccion);
+//         let (socket, direccion) = listener.accept().await?;
+//         println!("Nueva conexión desde {}", direccion);
         
-        let estado_clonado = estado.clone();
+//         let estado_clonado = estado.clone();
 
-        tokio::spawn(async move {
-            if let Err(e) = maneja_conexion(socket, estado_clonado).await {
-                eprintln!("Error en conexión {}: {}", direccion, e);
-            };
-        });
+//         tokio::spawn(async move {
+//             if let Err(e) = maneja_conexion(socket, estado_clonado).await {
+//                 eprintln!("Error en conexión {}: {}", direccion, e);
+//             };
+//         });
         
-        // match listener.accept().await {
-        //     Ok((socket, direccion)) => {
-        //         println!("Nueva conexión desde {}", direccion);
-        //         tokio::spawn(async move {
-        //             if let Err(e) = maneja_conexion(socket).await {
-        //                 eprintln!("Error en conexión {}: {}", direccion, e);
-        //             } 
-        //         });
-        //     },
-        //     Err(e) => {
-        //         eprintln!("Error aceptando la conexión: {}", e);
-        //         continue;
-        //     }   
-        // }
-    }
-}
+//         // match listener.accept().await {
+//         //     Ok((socket, direccion)) => {
+//         //         println!("Nueva conexión desde {}", direccion);
+//         //         tokio::spawn(async move {
+//         //             if let Err(e) = maneja_conexion(socket).await {
+//         //                 eprintln!("Error en conexión {}: {}", direccion, e);
+//         //             } 
+//         //         });
+//         //     },
+//         //     Err(e) => {
+//         //         eprintln!("Error aceptando la conexión: {}", e);
+//         //         continue;
+//         //     }   
+//         // }
+//     }
+// }
 
-//
-//
-//Función que va manejando la conexión de cada cliente que se conecta en el servidor URGENTE REFACTORIZACION
-async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Result<(), Box<dyn std::error::Error>> {
-    let (reader, mut writer) = socket.into_split();
+// //
+// //
+// //Función que va manejando la conexión de cada cliente que se conecta en el servidor URGENTE REFACTORIZACION
+// async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Result<(), Box<dyn std::error::Error>> {
+//     let (reader, mut writer) = socket.into_split();
 
-    let mut reader = BufReader::new(reader);
-    let mut linea = String::new();
-
-    
-    loop {
-        linea.clear();
-
-        let bytes_leidos = reader.read_line(&mut linea).await?;
-
-        if bytes_leidos == 0 {
-            println!("Cliente desconectado");
-            break;
-        }
-
-        let msg = match maneja_json::serializa_json_servidor(&linea) {
-            Ok(m) => m,
-            Err(e) => {
-                eprintln!("JSON inválido: {}", e);
-                continue;
-            }
-        };
+//     let mut reader = BufReader::new(reader);
+//     let mut linea = String::new();
 
     
-        let resultado = manejador_mensajes::procesa_mensaje(msg, estado.clone()).await;
+//     loop {
+//         linea.clear();
 
-        let resultado_string = match maneja_json::deserializa_json_cliente(resultado) {
-            Ok(s) => s,
-            Err(e) => {
-                continue;
-            }
-        };
-        
-        writer.write_all(resultado_string.as_bytes()).await;
-        
-        println!("Recibido: {}", linea.trim());
+//         let bytes_leidos = reader.read_line(&mut linea).await?;
 
-        //aqui va a ir una condicion que le diga al servidor que le mandaron para saber como debe responder
-        {
-            // let mut usuarios = estado.diccionario_usuarios.write();
-            // let mut cuartos = estado.diccionario_cuartos.write();
+//         if bytes_leidos == 0 {
+//             println!("Cliente desconectado");
+//             break;
+//         }
+
+//         let msg = match maneja_json::serializa_json_servidor(&linea) {
+//             Ok(m) => m,
+//             Err(e) => {
+//                 eprintln!("JSON inválido: {}", e);
+//                 continue;
+//             }
+//         };
+
     
-        }
+//         let resultado = manejador_mensajes::procesa_mensaje(msg, estado.clone()).await;
+
+//         let resultado_string = match maneja_json::deserializa_json_cliente(resultado) {
+//             Ok(s) => s,
+//             Err(e) => {
+//                 continue;
+//             }
+//         };
+        
+//         writer.write_all(resultado_string.as_bytes()).await;
+        
+//         println!("Recibido: {}", linea.trim());
+
+//         //aqui va a ir una condicion que le diga al servidor que le mandaron para saber como debe responder
+//         {
+//             // let mut usuarios = estado.diccionario_usuarios.write();
+//             // let mut cuartos = estado.diccionario_cuartos.write();
+    
+//         }
         
         
 
         
-        let respuesta = format!("{}\n", linea.trim());
-        writer.write_all(respuesta.as_bytes()).await?;
-    }
+//         let respuesta = format!("{}\n", linea.trim());
+//         writer.write_all(respuesta.as_bytes()).await?;
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }
 
 #[cfg(test)]
 mod tests {
