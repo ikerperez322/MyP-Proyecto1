@@ -35,7 +35,8 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
         
         // let respuesta = format!("{}\n", linea.trim());
         println!("Servidor: {}", respuesta_json.trim_end());
-        writer.write_all(respuesta_json.as_bytes()).await?;
+        let respuesta = format!("{}\n", respuesta_json);
+        writer.write_all(respuesta.as_bytes()).await?;
     }
 
     Ok(())
