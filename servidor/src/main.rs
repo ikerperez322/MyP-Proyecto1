@@ -1,32 +1,22 @@
-use std::env;
+use crate::configuracion::Configuracion;
 pub mod servidor;
 pub mod usuario;
 pub mod cuarto;
 pub mod estado_chat;
 pub mod manejador_mensajes;
 pub mod conexion;
+pub mod configuracion;
 
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
 
-    let args: Vec<String> = env::args().collect();
-    // let puerto = args.get(1).expect("Se debe de pasar un puerto.");
-    let puerto = match args.get(1) {
-        Some(p) => p,
-        None => {
-            return Err("Se debe de pasar un número de puerto como argumento.".into());
-        }
-    };
-
-    let _: u16 = match puerto.parse() {
-        Ok(num) => num,
-        Err(_) => {
-            return Err("El puerto debe ser un número.".into());
-        }
+    let config = match Configuracion::lee_argumentos() {
+        Ok(c) => c,
+        Err(_) => Configuracion::new(),
     };
     
-    servidor::correr_servidor(puerto).await?;
+    servidor::correr_servidor(&config.puerto.to_string()).await?;
 
     Ok(())
 }
