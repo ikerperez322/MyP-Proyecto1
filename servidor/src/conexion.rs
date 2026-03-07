@@ -22,7 +22,7 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
         
         println!("Cliente: {}", linea.trim_end());
         
-        let msg = match maneja_json::serializa_json_servidor(&linea) {
+        let msg = match maneja_json::serializa_json_cliente(&linea) {
             Ok(m) => m,
             Err(e) => {
                 eprintln!("JSON inválido: {}", e);
@@ -31,7 +31,7 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
         };
     
         let respuesta = manejador_mensajes::procesa_mensaje(msg, estado.clone()).await;
-        let respuesta_json = maneja_json::deserializa_json_cliente(respuesta)?;
+        let respuesta_json = maneja_json::deserializa_json_servidor(respuesta)?;
         
         // let respuesta = format!("{}\n", linea.trim());
         println!("Servidor: {}", respuesta_json.trim_end());

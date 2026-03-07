@@ -5,10 +5,10 @@ use crate::status::Status;
 use crate::nombres::{NombreCuarto, NombreUsuario};
 // use serde_json::Result;
 
-//Mensajes que recibe el servidor
+//Mensajes que manda el cliente
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
-pub enum MensajesServidor {
+pub enum MensajesCliente {
     #[serde(rename = "IDENTIFY")]
     Identify {
         username: NombreUsuario,
@@ -115,10 +115,10 @@ pub enum MensajesServidor {
     },
 }
 
-//Mensajes que recibe el cliente
+//Mensajes que manda el servidor
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
-pub enum MensajesCliente {
+pub enum MensajesServidor {
     #[serde(rename = "RESPONSE")]
     Response {
         operation: String,
