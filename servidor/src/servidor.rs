@@ -1,6 +1,4 @@
 use tokio::net::TcpListener;
-// use tokio::sync::RwLock;
-// use std::collections::HashMap;
 use std::sync::Arc;
 use crate::estado_chat::EstadoChat;
 use crate::conexion;
@@ -8,7 +6,7 @@ use crate::conexion;
 //método que corre el servidor y crea un hilo/task cada que recibe una nueva conexión de algún cliente
 pub async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Error>>{
 
-    let direccion = format!("127.0.0.1:{}", puerto);
+    let direccion = format!("0.0.0.0:{}", puerto);
 
     let listener = TcpListener::bind(direccion.clone()).await?;
     println!("Servidor corriendo en: {}", direccion);
