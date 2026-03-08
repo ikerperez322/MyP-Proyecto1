@@ -299,7 +299,7 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
             
             match args.get(1) {
                 Some(nombre) => {
-                    argumentos.push(nombre.to_string());
+                    argumentos.push(nombre.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 }
                 None => Err(String::from("Se necesita un nombre para identificarse.").into()),
@@ -308,7 +308,7 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
         "cambiarestado" => {
             match args.get(1) {
                 Some(estado) => {
-                    argumentos.push(estado.to_string());
+                    argumentos.push(estado.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 }
                 None => Err(String::from("Se necesita un estado.").into()),
@@ -330,7 +330,7 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
                 return Err(String::from("Se necesitan dos argumentos para esta instrucción.").into());
             }else {
                 argumentos.push(arg1.to_string());
-                argumentos.push(arg2.to_string());
+                argumentos.push(arg2.to_string().replace("\n", ""));
                 return Ok(argumentos);
             }
             
@@ -338,7 +338,7 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
         "textopublico" => {
             match args.get(1) {
                 Some(texto) => {
-                    argumentos.push(texto.to_string());
+                    argumentos.push(texto.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 },
                 None => Err(String::from("Se necesita un texto a enviar.").into()),
@@ -347,7 +347,7 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
         "creacuarto" => {
             match args.get(1) {
                 Some(nombre_cuarto) => {
-                    argumentos.push(nombre_cuarto.to_string());
+                    argumentos.push(nombre_cuarto.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 },
                 None => Err(String::from("Se necesita el nombre de un cuarto.").into()),
@@ -367,14 +367,14 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
                 return Err(String::from("Se necesitan dos argumentos para esta instrucción (uno debe ser una lista).").into());
             }else {
                 argumentos.push(arg1.to_string());
-                argumentos.push(arg2.to_string());
+                argumentos.push(arg2.to_string().replace("\n", ""));
                 return Ok(argumentos);
             }
         },
         "unirsecuarto" => {
             match args.get(1) {
                 Some(nombre_cuarto) => {
-                    argumentos.push(nombre_cuarto.to_string());
+                    argumentos.push(nombre_cuarto.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 },
                 None => Err(String::from("Se necesita el nombre de un cuarto.").into()),
@@ -383,7 +383,7 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
         "usuarioscuarto" => {
             match args.get(1) {
                 Some(nombre_cuarto) => {
-                    argumentos.push(nombre_cuarto.to_string());
+                    argumentos.push(nombre_cuarto.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 },
                 None => Err(String::from("Se necesita el nombre de un cuarto.").into()),
@@ -402,14 +402,14 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
                 return Err(String::from("Se necesitan dos argumentos para esta instrucción.").into());
             }else {
                 argumentos.push(arg1.to_string());
-                argumentos.push(arg2.to_string());
+                argumentos.push(arg2.to_string().replace("\n", ""));
                 return Ok(argumentos);
             }
         },
         "abandonacuarto" => {
             match args.get(1) {
                 Some(nombre_cuarto) => {
-                    argumentos.push(nombre_cuarto.to_string());
+                    argumentos.push(nombre_cuarto.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 },
                 None => Err(String::from("Se necesita el nombre de un cuarto.").into()),

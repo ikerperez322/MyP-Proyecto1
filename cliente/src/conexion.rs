@@ -62,6 +62,7 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
 
         // let accion = acciones_cliente::accion_cliente(determinar_accion(linea.clone()))?;
         let accion = acciones_cliente::accion_cliente(maneja_argumentos::determinar_accion(linea.clone()))?;
+        // println!("{}", accion);
         let json = format!("{}\n", accion);
         println!("{}", json);
         
