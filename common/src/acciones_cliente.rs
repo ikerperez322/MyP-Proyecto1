@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::collections::LinkedList;
+use crate::{nombres::NombreUsuario, status::Status};
 // use crate::status::Status;
 
 // enumeración que contiene todas las posibles acciones a realizar por parte del cliente
@@ -7,7 +8,7 @@ pub enum AccionCliente {
         nombre: String,
     },
     CambiarEstado {
-        nuevo_status: String,
+        nuevo_status: Status,
     },
     PedirListaUsuarios {
         
@@ -24,7 +25,7 @@ pub enum AccionCliente {
     },
     InvitaUsuariosCuarto {
         nombre_cuarto: String,
-        usuarios: HashMap<String, String>,
+        usuarios: LinkedList<NombreUsuario>,
     },
     UnirseCuarto {
         nombre_cuarto: String,

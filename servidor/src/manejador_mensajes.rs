@@ -32,66 +32,66 @@ pub async fn procesa_mensaje(mensaje_recibido: MensajesCliente, estado: Arc<Esta
         MensajesCliente::Status { status } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::NewStatus { username, status } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::NewStatus { username, status } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::Users {  } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::UserList { users } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::UserList { users } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::Text { username, text } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::TextFrom { username, text } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::TextFrom { username, text } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::PublicText { text } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::PublicTextFrom { username, text } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::PublicTextFrom { username, text } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::NewRoom { roomname } => {
             todo!("Implementar las respuestas del servidor");
         }
         MensajesCliente::Invite { roomname, usernames } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::Invitation { username, roomname } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::Invitation { username, roomname } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::JoinRoom { roomname } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::JoinedRoom { roomname, username } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::JoinedRoom { roomname, username } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::RoomUsers { roomname } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::RoomUserList { roomname, users } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::RoomUserList { roomname, users } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::RoomText { roomname, text } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::RoomTextFrom { roomname, username, text } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::RoomTextFrom { roomname, username, text } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::LeaveRoom { roomname } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::LeftRoom { roomname, username } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::LeftRoom { roomname, username } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::Disconnect {  } => {
             todo!("Implementar las respuestas del servidor");
         }
-        MensajesCliente::Disconnected { username } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::Disconnected { username } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
     }
 
 }

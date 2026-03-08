@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+use std::collections::{LinkedList};
 use common::acciones_cliente::AccionCliente;
+use common::status::Status;
 
 //método que recibe la linea que ingreso el usuario (previamente verificada) y determina a que accion del cliente corresponde, regresa un struct indicando que accion quiere realizar el usuario
 pub fn determinar_accion(linea: String) -> AccionCliente {
@@ -58,7 +59,19 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 Some(ns) => ns,
                 None => "",
             };
-            accion_struct = AccionCliente::CambiarEstado { nuevo_status: (nuevo_status.to_string()) };
+            let status_normalizado = nuevo_status.to_lowercase()
+                .replace("\n", "")
+                .replace("\r", "")
+                .replace(" ", "")
+                .replace(":", "")
+                .replace("_", "");
+            if status_normalizado == "active" {
+                accion_struct = AccionCliente::CambiarEstado { nuevo_status: (Status::ACTIVE) };
+            }else if status_normalizado == "busy" {
+                accion_struct = AccionCliente::CambiarEstado { nuevo_status: (Status::BUSY) };
+            }else if status_normalizado == "away" {
+                accion_struct = AccionCliente::CambiarEstado { nuevo_status: (Status::AWAY) };
+            }
             println!("Quieres cambiar de estado.");
         },
         "listausuarios" => {
@@ -108,7 +121,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
             // };
             accion_struct = AccionCliente::InvitaUsuariosCuarto {
                 nombre_cuarto: (nombre_cuarto.to_string()),
-                usuarios: (HashMap::new()),
+                usuarios: (LinkedList::new()),
             };
             println!("Quieres invitar gente a un cuarto.");
         },
