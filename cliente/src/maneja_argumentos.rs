@@ -318,19 +318,28 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
             
         // },
         "textoprivado" => {
+            let mut username: String = String::new();
+            let mut mensaje: String = String::new();
+            
             let arg1: bool = match args.get(1) {
-                Some(_) => true,
+                Some(destinatario) => {
+                    username = destinatario.to_string();
+                    true
+                },
                 None => false,
             };
             let arg2: bool = match args.get(2) {
-                Some(_) => true,
+                Some(texto) => {
+                    mensaje = texto.to_string();
+                    true
+                },
                 None => false,
             };
-            if arg1 == false && arg2 == false {
+            if arg1 == false || arg2 == false {
                 return Err(String::from("Se necesitan dos argumentos para esta instrucción.").into());
             }else {
-                argumentos.push(arg1.to_string());
-                argumentos.push(arg2.to_string().replace("\n", ""));
+                argumentos.push(username);
+                argumentos.push(mensaje.replace("\n", ""));
                 return Ok(argumentos);
             }
             
@@ -355,19 +364,28 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
         },
         //Como me van a pasar una lista este caso en específico está en proceso determinar como separar los usuarios que me envien (probablemente otra función auxiliar)
         "invitacuarto" => {
+            let mut roomname: String = String::new();
+            let mut users: String = String::new();
+            
             let arg1: bool = match args.get(1) {
-                Some(_) => true,
+                Some(nombre_cuarto) => {
+                    roomname = nombre_cuarto.to_string();
+                    true
+                },
                 None => false,
             };
             let arg2: bool = match args.get(2) {
-                Some(_) => true,
+                Some(usuarios) => {
+                    users = usuarios.to_string();
+                    true
+                },
                 None => false,
             };
-            if arg1 == false && arg2 == false {
+            if arg1 == false || arg2 == false {
                 return Err(String::from("Se necesitan dos argumentos para esta instrucción (uno debe ser una lista).").into());
             }else {
-                argumentos.push(arg1.to_string());
-                argumentos.push(arg2.to_string().replace("\n", ""));
+                argumentos.push(roomname);
+                argumentos.push(users.replace("\n", ""));
                 return Ok(argumentos);
             }
         },
@@ -390,19 +408,28 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
             }
         },
         "textocuarto" => {
+            let mut roomname: String = String::new();
+            let mut mensaje: String = String::new();
+            
             let arg1: bool = match args.get(1) {
-                Some(_) => true,
+                Some(nombre_cuarto) => {
+                    roomname = nombre_cuarto.to_string();
+                    true
+                },
                 None => false,
             };
             let arg2: bool = match args.get(2) {
-                Some(_) => true,
+                Some(texto) => {
+                    mensaje = texto.to_string();
+                    true
+                },
                 None => false,
             };
             if arg1 == false && arg2 == false {
                 return Err(String::from("Se necesitan dos argumentos para esta instrucción.").into());
             }else {
-                argumentos.push(arg1.to_string());
-                argumentos.push(arg2.to_string().replace("\n", ""));
+                argumentos.push(roomname);
+                argumentos.push(mensaje.replace("\n", ""));
                 return Ok(argumentos);
             }
         },
