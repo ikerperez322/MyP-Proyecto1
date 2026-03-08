@@ -5,6 +5,7 @@ use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use crate::{acciones_cliente, mensajes_cliente};
 use common::maneja_json;
 use common::protocolo::MensajesServidor;
+use crate::maneja_argumentos;
 
 //método que lee lo que manda el servidor, por el momento únicamente imprime en la salida estándar lo que va leyendo
 pub async fn leer_servidor(lector: OwnedReadHalf) -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +35,7 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
     let mut linea = String::new();
 
     //identificando al usuario
-    input.read_line(&mut linea).await?;
+    // input.read_line(&mut linea).await?;
 
     
     
@@ -46,101 +47,207 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
     // println!("{}", json);    
     // escritor.write_all(json.as_bytes()).await?;
 
-    determinar_accion(linea.clone());
+    // let accion = acciones_cliente::accion_cliente(determinar_accion(linea.clone()))?;
+    // let json = format!("{}\n", accion);
+    // println!("{}", json);
+    
+    // escritor.write_all(json.as_bytes()).await?;
+    // determinar_accion(linea.clone());
     
     loop {
 
         linea.clear();
         
         input.read_line(&mut linea).await?;
+
+        // let accion = acciones_cliente::accion_cliente(determinar_accion(linea.clone()))?;
+        let accion = acciones_cliente::accion_cliente(maneja_argumentos::determinar_accion(linea.clone()))?;
+        let json = format!("{}\n", accion);
+        println!("{}", json);
         
         if linea.trim() == "exit" {
             break;
         }
 
-        escritor.write_all(linea.as_bytes()).await?;
+        escritor.write_all(json.as_bytes()).await?;
     }
 
     Ok(())
 }
 
-//método que recibe la linea que ingreso el usuario (previamente verificada) y determina a que accion del cliente corresponde, regresa un struct indicando que accion quiere realizar el usuario
-fn determinar_accion(linea: String) -> AccionCliente {
+// //método que recibe la linea que ingreso el usuario (previamente verificada) y determina a que accion del cliente corresponde, regresa un struct indicando que accion quiere realizar el usuario
+// fn determinar_accion(linea: String) -> AccionCliente {
 
-    let palabras: Vec<&str> = linea.split_whitespace().collect();
+//     let palabras: Vec<&str> = linea.split_whitespace().collect();
 
-    let accion: &str = match palabras.get(0) {
-        Some(a) => a,
-        None => "none",
-    };
+//     let accion: &str = match palabras.get(0) {
+//         Some(a) => a,
+//         None => "none",
+//     };
 
-    let accion_normalizado = accion.to_lowercase()
-        .replace("\n", "")
-        .replace("\r", "")
-        .replace(" ", "")
-        .replace(":", "")
-        .replace("_", "");
+//     let accion_normalizado = accion.to_lowercase()
+//         .replace("\n", "")
+//         .replace("\r", "")
+//         .replace(" ", "")
+//         .replace(":", "")
+//         .replace("_", "");
 
-    let a = accion_normalizado.as_str();
+//     let a = accion_normalizado.as_str();
+
+//     let mut accion_struct: AccionCliente = AccionCliente::Desconectarse {  };
     
-    match a {
-        "identificarse" => {
-            println!("Quieres identificarte.");
-        },
-        "cambiarestado" => {
-            println!("Quieres cambiar de estado.");
-        },
-        "listausuarios" => {
-            println!("Quieres la lista de usuarios.");
-        },
-        "textoprivado" => {
-            println!("Quieres mandar un texto privado.");
-        },
-        "textopublico" => {
-            println!("Quieres mandar un texto público.");
-        },
-        "creacuarto" => {
-            println!("Quieres crear un cuarto.");
-        },
-        "invitacuarto" => {
-            println!("Quieres invitar gente a un cuarto.");
-        },
-        "unirsecuarto" => {
-            println!("Quieres unirte a un cuarto.");
-        },
-        "usuarioscuarto" => {
-            println!("Quieres obtener la lista de usuarios del cuarto.");
-        },
-        "textocuarto" => {
-            println!("Quieres mandar un mensaje al cuarto.");
-        },
-        "abandonacuarto" => {
-            println!("Quieres abandonar el cuarto.");
-        },
-        "desconectarse" => {
-            println!("Quieres desconectarte.");
-        },
-        _ => println!("No se que quieres hacer."),
-    }
+//     match a {
+//         "identificarse" => {
+//             let nombre: &str = match palabras.get(1) {
+//                 Some(n) => n,
+//                 None => "",
+//             };
+
+//             if nombre == "" {
+//                 println!("Se necesita un username para identificarse.");
+//             } else {
+//                 accion_struct = AccionCliente::Identificarse { nombre: (nombre.to_string()) };
+//             }
+            
+//             println!("Quieres identificarte.");
+//         },
+//         "cambiarestado" => {
+//             println!("Quieres cambiar de estado.");
+//         },
+//         "listausuarios" => {
+//             println!("Quieres la lista de usuarios.");
+//         },
+//         "textoprivado" => {
+//             println!("Quieres mandar un texto privado.");
+//         },
+//         "textopublico" => {
+//             println!("Quieres mandar un texto público.");
+//         },
+//         "creacuarto" => {
+//             println!("Quieres crear un cuarto.");
+//         },
+//         "invitacuarto" => {
+//             println!("Quieres invitar gente a un cuarto.");
+//         },
+//         "unirsecuarto" => {
+//             println!("Quieres unirte a un cuarto.");
+//         },
+//         "usuarioscuarto" => {
+//             println!("Quieres obtener la lista de usuarios del cuarto.");
+//         },
+//         "textocuarto" => {
+//             println!("Quieres mandar un mensaje al cuarto.");
+//         },
+//         "abandonacuarto" => {
+//             println!("Quieres abandonar el cuarto.");
+//         },
+//         "desconectarse" => {
+//             println!("Quieres desconectarte.");
+//         },
+//         _ => println!("No se que quieres hacer."),
+//     }
 
     
-    // if accion.trim() == "identificarse" {
-    //     println!("Te quieres identificar");
-    // }
+//     // if accion.trim() == "identificarse" {
+//     //     println!("Te quieres identificar");
+//     // }
 
     
     
-    println!("Palabras extraídas: {:?}", palabras);
+//     println!("Palabras extraídas: {:?}", palabras);
 
-    println!("Primer palabra: {:?}", palabras.get(0));
+//     println!("Primer palabra: {:?}", palabras.get(0));
     
-    todo!("Implementar función");
-}
+//     // todo!("Implementar función");
 
-//funcion que verifica que lo que ingreso el usuario sea válido
-fn verifica_linea(linea: String) -> String {
-    todo!("Implementar función");
-}
+//     return accion_struct;
+    
+// }
+
+// //funcion que verifica que lo que ingreso el usuario sea válido
+// fn verifica_linea(linea: String) -> Result<String, Box<dyn std::error::Error>> {
+
+//     let palabras: Vec<&str> = linea.split_whitespace().collect();
+
+//     // let instruccion: &str = palabras.get(0)?;
+
+//     let arg: bool = match palabras.get(0) {
+//         Some(_) => true,
+//         None => false,
+//     };
+
+//     if arg == false {
+//         return Err(String::from("No se encontró la instrucción a ejecutar").into());
+//     }
+
+//     //aqui ya sabemos que hay argumento por lo cual none jamás debería ocurrir
+//     let accion = match palabras.get(0) {
+//         Some(a) => a,
+//         None => "",
+//     };
+    
+//     let instruccion = verifica_instruccion(accion.to_string())?;
+    
+//     // if instruccion == "none"
+    
+//     // todo!("Implementar función");
+//     Ok(instruccion.to_string())
+// }
+
+// //función que verifica que la instrucción pasada (primer argumento de la linea de comandos) sea una acción válida (que exista) para el cliente
+// fn verifica_instruccion(linea: String) -> Result<String, Box<dyn std::error::Error>> {
+
+//     let accion_normalizado = linea.to_lowercase()
+//         .replace("\n", "")
+//         .replace("\r", "")
+//         .replace(" ", "")
+//         .replace(":", "")
+//         .replace("_", "");
+
+//     let a = accion_normalizado.as_str();
+
+    
+//     match a {
+//         "identificarse" => {
+//             return Ok("identificarse".to_string());
+//         },
+//         "cambiarestado" => {
+//             return Ok("cambiarestado".to_string());
+//         },
+//         "listausuarios" => {
+//             return Ok("listausuarios".to_string());
+//         },
+//         "textoprivado" => {
+//             return Ok("textoprivado".to_string());
+//         },
+//         "textopublico" => {
+//             return Ok("textopublico".to_string());
+//         },
+//         "creacuarto" => {
+//             return Ok("creacuarto".to_string());
+//         },
+//         "invitacuarto" => {
+//             return Ok("invitacuarto".to_string());
+//         },
+//         "unirsecuarto" => {
+//             return Ok("unirsecuarto".to_string());
+//         },
+//         "usuarioscuarto" => {
+//             return Ok("usuarioscuarto".to_string());
+//         },
+//         "textocuarto" => {
+//             return Ok("textocuarto".to_string());
+//         },
+//         "abandonacuarto" => {
+//             return Ok("abandonacuarto".to_string());
+//         },
+//         "desconectarse" => {
+//             return Ok("desconectarse".to_string());
+//         },
+//         _ => return Err(String::from("Instrucción inválida.").into()),
+//     }
+    
+// }
 
 
 

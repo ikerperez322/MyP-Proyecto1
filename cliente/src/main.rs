@@ -4,6 +4,7 @@ pub mod cliente;
 pub mod conexion;
 pub mod mensajes_cliente;
 pub mod acciones_cliente;
+pub mod maneja_argumentos;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn::std::error::Error>> {

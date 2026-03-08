@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::status::Status;
+// use crate::status::Status;
 
 // enumeración que contiene todas las posibles acciones a realizar por parte del cliente
 pub enum AccionCliente {
@@ -7,7 +7,7 @@ pub enum AccionCliente {
         nombre: String,
     },
     CambiarEstado {
-        nuevo_status: Status,
+        nuevo_status: String,
     },
     PedirListaUsuarios {
         
