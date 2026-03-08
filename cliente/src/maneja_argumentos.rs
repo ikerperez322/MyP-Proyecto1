@@ -214,6 +214,11 @@ fn verifica_linea(linea: String) -> Result<Vec<String>, Box<dyn std::error::Erro
     
     if instruccion == "listausuarios" || instruccion == "desconectarse" {
         //no mandar llamar a la función porque no reciben argumentos esas instrucciones
+
+        //dividimos en 2 en el caso de que sea un texto público para que todo lo que venga después de la instrucción lo tome como argumento
+    }else if instruccion == "textopublico" {
+        let palabras2: Vec<&str> = linea.splitn(2, ' ').collect();
+        args = verifica_argumentos(palabras2, instruccion.clone())?;
     }else {
         args = verifica_argumentos(palabras, instruccion.clone())?;
     }
