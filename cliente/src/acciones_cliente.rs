@@ -1,3 +1,5 @@
+use std::collections::LinkedList;
+
 // use crate::mensajes_cliente;
 use common::protocolo::MensajesCliente;
 use common::maneja_json;
@@ -49,9 +51,15 @@ pub fn accion_cliente(accion: AccionCliente) -> Result<String, Box<dyn std::erro
             return Ok(json_struct);
         },
         AccionCliente::InvitaUsuariosCuarto { nombre_cuarto, usuarios } => {
+
+            let users: LinkedList<NombreUsuario> = usuarios
+                .iter()
+                .map(|s| NombreUsuario(s.clone()))
+                .collect();
+            
             json_struct = maneja_json::deserializa_json_cliente(MensajesCliente::Invite {
                 roomname: (NombreCuarto(nombre_cuarto)),
-                usernames: (usuarios),
+                usernames: (users),
             })?;
             return Ok(json_struct);
         },

@@ -1,5 +1,5 @@
 use std::collections::LinkedList;
-use crate::{nombres::NombreUsuario, status::Status};
+use crate::{status::Status};
 // use crate::status::Status;
 
 // enumeración que contiene todas las posibles acciones a realizar por parte del cliente
@@ -26,7 +26,7 @@ pub enum AccionCliente {
     },
     InvitaUsuariosCuarto {
         nombre_cuarto: String,
-        usuarios: LinkedList<NombreUsuario>,
+        usuarios: LinkedList<String>
     },
     UnirseCuarto {
         nombre_cuarto: String,

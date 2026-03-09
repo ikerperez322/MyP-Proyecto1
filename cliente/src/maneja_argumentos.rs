@@ -1,5 +1,6 @@
 use std::collections::{LinkedList};
 use common::acciones_cliente::AccionCliente;
+// use common::nombres::NombreUsuario;
 use common::status::Status;
 
 //método que recibe la linea que ingreso el usuario (previamente verificada) y determina a que accion del cliente corresponde, regresa un struct indicando que accion quiere realizar el usuario
@@ -115,13 +116,16 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 Some(nc) => nc,
                 None => "",
             };
-            // let usuarios: &str = match args.get(2) {
-            //     Some(u) => u,
-            //     None => "",
-            // };
+
+            let nombres_usuarios: LinkedList<String> = args
+                .iter()
+                .skip(2)
+                .cloned()
+                .collect();
+
             accion_struct = AccionCliente::InvitaUsuariosCuarto {
                 nombre_cuarto: (nombre_cuarto.to_string()),
-                usuarios: (LinkedList::new()),
+                usuarios: (nombres_usuarios),
             };
             println!("Quieres invitar gente a un cuarto.");
         },
@@ -235,12 +239,34 @@ fn verifica_linea(linea: String) -> Result<Vec<String>, Box<dyn std::error::Erro
     //agregamos la acción a realizar como primer elemento del vector
     instrucciones.push(instruccion.clone());
 
-    //los demás elementos del vector son los argumentos de la acción a realizar (el texto es lo último)
-    if instruccion != "listausuarios" && instruccion != "desconectarse" {
-        for i in args {
+    //pasamos el segundo argumento de invita cuarto (usuarios a la función que regresa los usuarios en forma de vector)
+    //al final en este caso se regresará un vector donde el primer elemento es la instrucción, el segundo es el nombre del cuarto y los demas son los strings de usuarios
+    if instruccion == "invitacuarto" {
+        let arg_users: String = match args.get(1) {
+            Some(u) => u.to_string(),
+            None => "".to_string(),
+        };
+        
+        let usuarios: Vec<String> = saca_usuarios(arg_users)?;
+
+        //nuevamente, teóricamente jamás debería de ocurrir None por toda la validación previa
+        instrucciones.push(match args.get(0) {
+            Some(nombre_cuarto) => nombre_cuarto.to_string(),
+            None => "".to_string(),
+        });
+        
+        for i in usuarios {
             instrucciones.push(i);
-        } 
+        }
+    }else {
+        if instruccion != "listausuarios" && instruccion != "desconectarse" {
+            for i in args {
+                instrucciones.push(i);
+            } 
+        }
     }
+    
+    //los demás elementos del vector son los argumentos de la acción a realizar (el texto es lo último)
     
     return Ok(instrucciones);
 }
@@ -462,5 +488,27 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
     
 }
 
+//función que recibe el segundo argumento de invitaCuarto y devuelve un vector cuyos elementos son los usernames de los usuarios a invitar
+//(toma en cuenta la separación por comas ',' por lo que todo lo que no esté separado por comas lo tomará como un único usuario)
+fn saca_usuarios(argumentos: String) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+
+    // let usernames: Vec<String>;
+
+    if !argumentos.contains('[') || !argumentos.contains(']') {
+        return Err("Se necesitan corchetes para indicar la lista de usuarios".into());
+    }
+
+    let linea_sin_corchetes = argumentos
+        .replace("[", "")
+        .replace("]", "");
+    
+    let nombres: Vec<&str> = linea_sin_corchetes.split(',').collect();
+
+    let usernames: Vec<String> = nombres.iter()
+        .map(|s| s.trim().to_string())
+        .collect();
+    
+    return Ok(usernames);
+}
 
 
