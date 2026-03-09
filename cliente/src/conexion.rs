@@ -61,16 +61,34 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
         input.read_line(&mut linea).await?;
 
         // let accion = acciones_cliente::accion_cliente(determinar_accion(linea.clone()))?;
-        let accion = acciones_cliente::accion_cliente(maneja_argumentos::determinar_accion(linea.clone()))?;
-        // println!("{}", accion);
-        let json = format!("{}\n", accion);
-        println!("{}", json);
-        
+        // let accion = acciones_cliente::accion_cliente(maneja_argumentos::determinar_accion(linea.clone()))?;
+
         if linea.trim() == "exit" {
             break;
         }
+        
+        let mut accion: Option<String> = None;
+        
+        match acciones_cliente::accion_cliente(maneja_argumentos::determinar_accion(linea.clone())) {
+            Ok(json) => {
+                accion = Some(json);
+            },
+            Err(e) => println!("Error: {}", e),
+        };
+        
+        // println!("{}", accion);
+        
+        if let Some(valor) = accion {
+            let json = format!("{}\n", valor);
+            println!("{}", json);
+           
 
-        escritor.write_all(json.as_bytes()).await?;
+            escritor.write_all(json.as_bytes()).await?;
+        } else {
+            continue;
+        }
+        
+
     }
 
     Ok(())

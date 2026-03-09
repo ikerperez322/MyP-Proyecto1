@@ -36,7 +36,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
         None => "",
     };
     
-    let mut accion_struct: AccionCliente = AccionCliente::Desconectarse {  };
+    let mut accion_struct: AccionCliente = AccionCliente::AccionInvalida {  };
 
     //teoricamente los casos de None no deberían de pasar JAMAS por la validación hecha previamente
     match instruccion {
@@ -165,7 +165,10 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
             accion_struct = AccionCliente::Desconectarse {  };
             println!("Quieres desconectarte.");
         },
-        _ => println!("No se que quieres hacer."),
+        _ => {
+            accion_struct = AccionCliente::AccionInvalida {  };
+            println!("Pusiste una acción inválida.");
+        },
     }
 
     
@@ -181,7 +184,11 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
     
     // todo!("Implementar función");
 
+    // if matches!(accion_struct, AccionCliente::AccionInvalida {  }) {
+    //     return Err("Es una acción inválida".into());
+    // }else {
     return accion_struct;
+    // }
     
 }
 

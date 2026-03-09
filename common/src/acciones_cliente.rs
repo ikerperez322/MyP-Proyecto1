@@ -3,6 +3,7 @@ use crate::{nombres::NombreUsuario, status::Status};
 // use crate::status::Status;
 
 // enumeración que contiene todas las posibles acciones a realizar por parte del cliente
+// #[derive(PartialEq, Debug)]
 pub enum AccionCliente {
     Identificarse {
         nombre: String,
@@ -43,6 +44,9 @@ pub enum AccionCliente {
     Desconectarse {
         
     },
+    AccionInvalida {
+        
+    }
 }
 
 

@@ -84,7 +84,9 @@ pub fn accion_cliente(accion: AccionCliente) -> Result<String, Box<dyn std::erro
             json_struct = maneja_json::deserializa_json_cliente(MensajesCliente::Disconnect {  })?;
             return Ok(json_struct);
         },
-        
+        AccionCliente::AccionInvalida {  } => {
+            return Err(String::from("Acción inválida").into());
+        }
     }
     
     
