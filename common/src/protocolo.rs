@@ -13,10 +13,10 @@ pub enum MensajesCliente {
     Identify {
         username: NombreUsuario,
     },
-    #[serde(rename = "NEW_USER")]
-    NewUser {
-        username: NombreUsuario,
-    },
+    // #[serde(rename = "NEW_USER")]
+    // NewUser {
+    //     username: NombreUsuario,
+    // },
     #[serde(rename = "STATUS")]
     Status {
         status: Status,

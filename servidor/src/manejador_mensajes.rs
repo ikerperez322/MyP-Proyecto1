@@ -26,9 +26,9 @@ pub async fn procesa_mensaje(mensaje_recibido: MensajesCliente, estado: Arc<Esta
             }
 
         }
-        MensajesCliente::NewUser { username } => {
-            todo!("Implementar las respuestas del servidor");
-        }
+        // MensajesCliente::NewUser { username } => {
+        //     todo!("Implementar las respuestas del servidor");
+        // }
         MensajesCliente::Status { status } => {
             todo!("Implementar las respuestas del servidor");
         }
