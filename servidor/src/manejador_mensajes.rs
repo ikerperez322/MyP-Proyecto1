@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::collections::LinkedList;
+use common::maneja_json::deserializa_json_servidor;
 use common::nombres::NombreUsuario;
 use common::protocolo::{MensajesCliente, MensajesServidor};
 use common::status::Status;
@@ -27,7 +28,8 @@ pub async fn procesa_mensaje(mensaje_recibido: MensajesCliente, estado: Arc<Esta
                 });
                 *usuario_actual = Some(username.clone());
 
-                let msg: String = format!("{} se ha conectado", username.0);
+                // let msg: String = format!("{} se ha conectado", username.0);
+                let msg: MensajesServidor = MensajesServidor::NewUser { username: (username.clone()) };
                 
                 estado.tx.send(EventoChat{
                     autor: username.clone(),

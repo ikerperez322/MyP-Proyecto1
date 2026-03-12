@@ -47,19 +47,21 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
             
             Ok(evento) = rx.recv() => {
 
+                let mensaje: String = maneja_json::deserializa_json_servidor(evento.mensaje)?;
+                
                 match &usuario_actual {
-
+                    
                     Some(usuario) => {
                         if *usuario != evento.autor {
                             writer.write_all(
-                                format!("{}\n", evento.mensaje).as_bytes()
+                                format!("{}\n", mensaje).as_bytes()
                             ).await?;
                         }
                     }
 
                     None => {
                         writer.write_all(
-                            format!("{}\n", evento.mensaje).as_bytes()
+                            format!("{}\n", mensaje).as_bytes()
                         ).await?;
                     }
 

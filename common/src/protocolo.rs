@@ -116,7 +116,7 @@ pub enum MensajesCliente {
 }
 
 //Mensajes que manda el servidor
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum MensajesServidor {
     #[serde(rename = "RESPONSE")]
