@@ -6,6 +6,7 @@ pub mod estado_chat;
 pub mod manejador_mensajes;
 pub mod conexion;
 pub mod configuracion;
+pub mod evento_servidor;
 
 
 #[tokio::main]

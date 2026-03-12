@@ -1,4 +1,5 @@
 use tokio::net::TcpListener;
+use tokio::sync::broadcast;
 use std::sync::Arc;
 use crate::estado_chat::EstadoChat;
 use crate::conexion;
@@ -11,8 +12,10 @@ pub async fn correr_servidor(puerto: &str) -> Result<(), Box<dyn std::error::Err
     let listener = TcpListener::bind(direccion.clone()).await?;
     println!("Servidor corriendo en: {}", direccion);
 
+    let (tx, _) = broadcast::channel(100);
+    
     //variable con que contiene el diccionario de usuarios y el diccionario de cuartos existentes para pasarselo a cada task de tokio
-    let estado = Arc::new(EstadoChat::new());
+    let estado = Arc::new(EstadoChat::new(tx.clone()));
     
     loop {
 
