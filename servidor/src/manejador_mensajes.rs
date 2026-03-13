@@ -48,7 +48,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
-                None => &mut NombreUsuario("".to_string()),
+                None => return None,
             };
 
             let mut usuario_encontrado: bool = false;
@@ -96,7 +96,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
-                None => &mut NombreUsuario("".to_string()),
+                None => return None,
             };
 
             
@@ -135,7 +135,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
-                None => &mut NombreUsuario("".to_string()),
+                None => return None,
             };
 
             //borrar el usuario del diccionario
