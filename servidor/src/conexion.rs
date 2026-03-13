@@ -4,6 +4,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::broadcast;
 use std::sync::Arc;
 use crate::estado_chat::EstadoChat;
+use crate::evento_servidor::EventoChat;
 use crate::manejador_mensajes;
 use common::maneja_json;
 use common::protocolo::MensajesCliente;
@@ -17,9 +18,11 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
     let mut reader = BufReader::new(reader);
     let mut linea = String::new();
 
+    let (tx_usuario, mut rx_usuario) = tokio::sync::mpsc::channel::<EventoChat>(100);
+        
     let mut usuario_actual: Option<NombreUsuario> = None;
 
-    let mut rx = estado.tx.subscribe();
+    let mut rx_broadcast = estado.tx.subscribe();
     
     loop {
 
@@ -50,7 +53,7 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                 //     None
                 // };
 
-                if let Some(respuesta) = manejador_mensajes::procesa_mensaje(&msg, estado.clone(), &mut usuario_actual).await {
+                if let Some(respuesta) = manejador_mensajes::procesa_mensaje(&msg, estado.clone(), &mut usuario_actual, tx_usuario.clone()).await {
 
                     let respuesta_json = maneja_json::deserializa_json_servidor(respuesta)?;
                     println!("Servidor: {}", respuesta_json.trim_end());
@@ -65,7 +68,7 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                 
             }
             
-            Ok(evento) = rx.recv() => {
+            Ok(evento) = rx_broadcast.recv() => {
 
                 let mensaje: String = maneja_json::deserializa_json_servidor(evento.mensaje)?;
                 
@@ -89,32 +92,19 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                 
                 // writer.write_all(format!("{}\n", msg).as_bytes()).await?;
             }
+
+            Some(evento) = rx_usuario.recv() => {
+
+                let mensaje = maneja_json::deserializa_json_servidor(evento.mensaje)?;
+
+                writer.write_all(
+                    format!("{}\n", mensaje).as_bytes()
+                ).await?;
+            }
+
             
         }
         
-        // linea.clear();
-
-        // if reader.read_line(&mut linea).await? == 0 {
-        //     break;
-        // }
-        
-        // println!("Cliente: {}", linea.trim_end());
-        
-        // let msg = match maneja_json::serializa_json_cliente(&linea) {
-        //     Ok(m) => m,
-        //     Err(e) => {
-        //         eprintln!("JSON inválido: {}", e);
-        //         continue;
-        //     }
-        // };        
-        
-        // let respuesta = manejador_mensajes::procesa_mensaje(msg, estado.clone(), &mut usuario_actual).await;
-        // let respuesta_json = maneja_json::deserializa_json_servidor(respuesta)?;
-        
-        // // let respuesta = format!("{}\n", linea.trim());
-        // println!("Servidor: {}", respuesta_json.trim_end());
-        // let respuesta = format!("{}\n", respuesta_json);
-        // writer.write_all(respuesta.as_bytes()).await?;
     }
 
     Ok(())

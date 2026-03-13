@@ -1,5 +1,6 @@
-use std::sync::Arc;
+use std::sync::{Arc, mpsc};
 use std::collections::{HashMap, LinkedList};
+use std::sync::mpsc::{Receiver, Sender};
 // use common::maneja_json::deserializa_json_servidor;
 use common::nombres::NombreUsuario;
 use common::protocolo::{MensajesCliente, MensajesServidor};
@@ -10,7 +11,7 @@ use crate::usuario;
 use crate::{estado_chat::EstadoChat, usuario::Usuario};
 
 //método que maneja cada posible mensaje que le puede llegar por parte del cliente
-pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<EstadoChat>, mut usuario_actual: &mut Option<NombreUsuario>) -> Option<MensajesServidor> {
+pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<EstadoChat>, usuario_actual: &mut Option<NombreUsuario>, sender: tokio::sync::mpsc::Sender<EventoChat>) -> Option<MensajesServidor> {
     match mensaje_recibido {
         
         MensajesCliente::Identify { username } => {
@@ -22,10 +23,14 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("USER_ALREADY_EXISTS".to_string()), extra: (username.0.clone()) });
                 //usuario no existe, el usuario se identifica con éxito
             }else {
+
+                let mut mensajes_usuarios = estado.forma_mandar_mensajes.write().await;
+                mensajes_usuarios.insert(username.clone(), sender);
+                
                 usuarios.insert(username.clone(), Usuario{
-                        username: username.clone(),
-                        status: Status::ACTIVE,
-                        cuartos: LinkedList::new(),
+                    username: username.clone(),
+                    status: Status::ACTIVE,
+                    cuartos: LinkedList::new(),
                 });
                 *usuario_actual = Some(username.clone());
 
@@ -34,6 +39,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 
                 estado.tx.send(EventoChat{
                     autor: username.clone(),
+                    destino: None,
                     mensaje: msg,
                 });
                 
@@ -67,6 +73,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 
                 estado.tx.send(EventoChat {
                     autor: (usuario.clone()),
+                    destino: None,
                     mensaje: (msg.clone()) });
             
             }
@@ -86,11 +93,43 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             return Some(MensajesServidor::UserList { users: (lista_usuarios) });
         }
         MensajesCliente::Text { username, text } => {
-            todo!("Implementar las respuestas del servidor");
+
+            let tx_destino = {
+                let mapa = estado.forma_mandar_mensajes.read().await;
+                mapa.get(&username).cloned()
+            };
+
+            if let Some(tx_destino) = tx_destino {
+
+                let usuario = match usuario_actual {
+                    Some(user) => user,
+                    None => return None,
+                };
+
+                let msg = MensajesServidor::TextFrom {
+                    username: usuario.clone(),
+                    text: text.clone(),
+                };
+
+                let evento = EventoChat {
+                    autor: usuario.clone(),
+                    destino: Some(username.clone()),
+                    mensaje: msg,
+                };
+
+                let _ = tx_destino.send(evento).await;
+
+                return None;
+
+            } else {
+
+                return Some(MensajesServidor::Response {
+                    operation: "TEXT".to_string(),
+                    result: "NO_SUCH_USER".to_string(),
+                    extra: username.0.to_string(),
+                });
+            }            
         }
-        // MensajesCliente::TextFrom { username, text } => {
-        //     todo!("Implementar las respuestas del servidor");
-        // }
         MensajesCliente::PublicText { text } => {
 
             let usuario = match usuario_actual {
@@ -106,6 +145,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             estado.tx.send(EventoChat {
                 autor: (usuario.clone()),
+                destino: None,
                 mensaje: (msg.clone()) });
             
             return None;
@@ -146,6 +186,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             estado.tx.send(EventoChat {
                 autor: (usuario.clone()),
+                destino: None,
                 mensaje: (msg.clone()) });
             
             return None;
