@@ -6,6 +6,8 @@ use std::sync::Arc;
 use crate::estado_chat::EstadoChat;
 use crate::manejador_mensajes;
 use common::maneja_json;
+use common::protocolo::MensajesCliente;
+
 
 //método que lee lo que manda el cliente y serializa, deserializa json y envía las respuestas al cliente
 pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Result<(), Box<dyn std::error::Error>> {
@@ -21,11 +23,15 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
     
     loop {
 
+        linea.clear();
+        
         tokio::select! {
+            
+            peticion = reader.read_line(&mut linea) => {
+                
+                println!("Cliente: {}", linea.trim_end());
 
-            res = reader.read_line(&mut linea) => {
-
-                if res? == 0 {
+                if peticion? == 0 {
                     break;
                 }
 
@@ -36,13 +42,27 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                         continue;
                     }
                 };        
-                
-                let respuesta = manejador_mensajes::procesa_mensaje(msg, estado.clone(), &mut usuario_actual).await;
-                let respuesta_json = maneja_json::deserializa_json_servidor(respuesta)?;
 
-                println!("Servidor: {}", respuesta_json.trim_end());
-                let respuesta = format!("{}", respuesta_json);
-                writer.write_all(format!("{}\n", respuesta).as_bytes()).await?;
+                
+                
+                // let respuesta = match manejador_mensajes::procesa_mensaje(msg, estado.clone(), &mut usuario_actual).await {
+                //     Some(response) => response,
+                //     None
+                // };
+
+                if let Some(respuesta) = manejador_mensajes::procesa_mensaje(&msg, estado.clone(), &mut usuario_actual).await {
+
+                    let respuesta_json = maneja_json::deserializa_json_servidor(respuesta)?;
+                    println!("Servidor: {}", respuesta_json.trim_end());
+                    // let respuesta = format!("{}", respuesta_json);
+                    writer.write_all(format!("{}\n", respuesta_json).as_bytes()).await?;
+                }
+
+                if let MensajesCliente::Disconnect {} = msg {
+                    println!("Cliente solicitó desconectarse.");
+                    break;
+                }                
+                
             }
             
             Ok(evento) = rx.recv() => {
@@ -99,17 +119,3 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
 
     Ok(())
 }
-
-//función que recibe un TcpStream y regresa un Nombre Usuario que determina que usuario está mandando el mensaje para poder hacer la lógica del servidor
-async fn define_estado_usuario(socket: &mut TcpStream) {
-
-    match socket.peer_addr() {
-        Ok(addr) => println!("{:?}", addr),
-        Err(e) => println!("{}", e),
-    };
-
-    // return None;
-}
-
-
-

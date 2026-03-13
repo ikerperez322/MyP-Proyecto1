@@ -17,7 +17,7 @@ pub async fn leer_servidor(lector: OwnedReadHalf) -> Result<(), Box<dyn std::err
         linea.clear();
         
         if lector.read_line(&mut linea).await? == 0 {
-            println!("Servidor desconectado");
+            println!("Programa terminado.");
             break;
         }
 
@@ -62,7 +62,6 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
 
         // let accion = acciones_cliente::accion_cliente(determinar_accion(linea.clone()))?;
         // let accion = acciones_cliente::accion_cliente(maneja_argumentos::determinar_accion(linea.clone()))?;
-
         if linea.trim() == "exit" {
             break;
         }
