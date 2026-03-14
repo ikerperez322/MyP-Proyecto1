@@ -1,13 +1,11 @@
-use std::sync::{Arc, mpsc};
+use std::sync::Arc;
 use std::collections::{HashMap, LinkedList};
-use std::sync::mpsc::{Receiver, Sender};
-// use common::maneja_json::deserializa_json_servidor;
 use common::nombres::NombreUsuario;
 use common::protocolo::{MensajesCliente, MensajesServidor};
 use common::status::Status;
+use tokio::sync::mpsc::Sender;
 
 use crate::evento_servidor::EventoChat;
-use crate::usuario;
 use crate::{estado_chat::EstadoChat, usuario::Usuario};
 
 //método que maneja cada posible mensaje que le puede llegar por parte del cliente
@@ -18,8 +16,11 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             let mut usuarios = estado.diccionario_usuarios.write().await;
             
-            //usuario ya existe
-            if usuarios.contains_key(&username) {
+            //checamos que el cliente no se quiera volver a identificar
+            if usuario_actual.is_some() {
+                return None;
+                //usuario ya existe
+            } else if usuarios.contains_key(&username) {
                 return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("USER_ALREADY_EXISTS".to_string()), extra: (username.0.clone()) });
                 //usuario no existe, el usuario se identifica con éxito
             }else {
@@ -34,14 +35,10 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 });
                 *usuario_actual = Some(username.clone());
 
-                // let msg: String = format!("{} se ha conectado", username.0);
-                let msg: MensajesServidor = MensajesServidor::NewUser { username: (username.clone()) };
-                
-                estado.tx.send(EventoChat{
-                    autor: username.clone(),
-                    destino: None,
-                    mensaje: msg,
-                });
+                envia_mensajes_secundarios_publicos(username.clone(), None,
+                    MensajesServidor::NewUser {
+                    username: (username.clone()) },
+                    estado.clone());
                 
                 return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("SUCCESS".to_string()), extra: (username.0.clone()) });
             }
@@ -59,23 +56,20 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             let mut usuario_encontrado: bool = false;
 
-            for (llave, valor) in usuarios.iter_mut() {
+            for (llave, user) in usuarios.iter_mut() {
                 if llave == usuario {
-                    valor.status = status.clone();
+                    user.status = status.clone();
                     usuario_encontrado = true;
                 }
             }
             
             if usuario_encontrado == true {
-                let msg: MensajesServidor = MensajesServidor::NewStatus {
-                    username: (usuario.clone()),
-                    status: (status.clone()) };
+                envia_mensajes_secundarios_publicos(usuario.clone(), None,
+                    MensajesServidor::NewStatus {
+                        username: (usuario.clone()),
+                        status: (status.clone()) },
+                    estado.clone());
                 
-                estado.tx.send(EventoChat {
-                    autor: (usuario.clone()),
-                    destino: None,
-                    mensaje: (msg.clone()) });
-            
             }
                      
             return None;
@@ -90,7 +84,9 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 lista_usuarios.insert(llave.clone(), user.status.clone());
             }
             
-            return Some(MensajesServidor::UserList { users: (lista_usuarios) });
+            return Some(MensajesServidor::UserList {
+                users: (lista_usuarios)
+            });
         }
         MensajesCliente::Text { username, text } => {
 
@@ -106,18 +102,10 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                     None => return None,
                 };
 
-                let msg = MensajesServidor::TextFrom {
-                    username: usuario.clone(),
-                    text: text.clone(),
-                };
-
-                let evento = EventoChat {
-                    autor: usuario.clone(),
-                    destino: Some(username.clone()),
-                    mensaje: msg,
-                };
-
-                let _ = tx_destino.send(evento).await;
+                envia_mensajes_secundarios_privados(usuario.clone(), Some(username.clone()), MensajesServidor::TextFrom {
+                    username: (usuario.clone()),
+                    text: (text.clone()) },
+                    tx_destino).await;
 
                 return None;
 
@@ -138,15 +126,11 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 None => return None,
             };
 
-            
-            let msg: MensajesServidor = MensajesServidor::PublicTextFrom {
-                username: (usuario.clone()),
-                text: (text.to_string()) };
-
-            estado.tx.send(EventoChat {
-                autor: (usuario.clone()),
-                destino: None,
-                mensaje: (msg.clone()) });
+            envia_mensajes_secundarios_publicos(usuario.clone(), None,
+                MensajesServidor::PublicTextFrom {
+                    username: (usuario.clone()),
+                    text: (text.to_string()) },
+                estado);
             
             return None;
         }
@@ -185,15 +169,34 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             usuarios.remove(usuario);
             mapa.remove(usuario);
 
-            let msg: MensajesServidor = MensajesServidor::Disconnected { username: (usuario.clone()) };
+            envia_mensajes_secundarios_publicos(usuario.clone(), None,
+                MensajesServidor::Disconnected {
+                    username: (usuario.clone()) },
+                estado.clone());
 
-            estado.tx.send(EventoChat {
-                autor: (usuario.clone()),
-                destino: None,
-                mensaje: (msg.clone()) });
             
             return None;
         }
     }
 
+}
+
+//envia los mensajes a los demás usuarios conectados con tokio broadcast
+fn envia_mensajes_secundarios_publicos(autor: NombreUsuario, destino: Option<NombreUsuario>, mensaje: MensajesServidor, estado: Arc<EstadoChat>) {
+
+    let _ = estado.tx.send(EventoChat{
+        autor: autor,
+        destino: destino,
+        mensaje: mensaje,
+    });
+}
+
+async fn envia_mensajes_secundarios_privados(autor: NombreUsuario, destino: Option<NombreUsuario>, mensaje: MensajesServidor, tx_destino: Sender<EventoChat>) {
+
+    let _ = tx_destino.send(EventoChat{
+        autor: autor,
+        destino: destino,
+        mensaje: mensaje,
+    }).await;
+    
 }

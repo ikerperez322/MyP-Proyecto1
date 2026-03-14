@@ -44,14 +44,7 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                         eprintln!("JSON inválido: {}", e);
                         continue;
                     }
-                };        
-
-                
-                
-                // let respuesta = match manejador_mensajes::procesa_mensaje(msg, estado.clone(), &mut usuario_actual).await {
-                //     Some(response) => response,
-                //     None
-                // };
+                };
 
                 if let Some(respuesta) = manejador_mensajes::procesa_mensaje(&msg, estado.clone(), &mut usuario_actual, tx_usuario.clone()).await {
 
@@ -89,8 +82,6 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                     }
 
                 }
-                
-                // writer.write_all(format!("{}\n", msg).as_bytes()).await?;
             }
 
             Some(evento) = rx_usuario.recv() => {
