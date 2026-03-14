@@ -172,15 +172,18 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             let mut usuarios = estado.diccionario_usuarios.write().await;
 
+            let mut mapa = estado.forma_mandar_mensajes.write().await;
+            
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
                 None => return None,
             };
 
+            
             //borrar el usuario del diccionario
             usuarios.remove(usuario);
-            
+            mapa.remove(usuario);
 
             let msg: MensajesServidor = MensajesServidor::Disconnected { username: (usuario.clone()) };
 
