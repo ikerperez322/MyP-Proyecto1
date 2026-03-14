@@ -6,7 +6,7 @@ use crate::nombres::{NombreCuarto, NombreUsuario};
 // use serde_json::Result;
 
 //Mensajes que manda el cliente
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum MensajesCliente {
     #[serde(rename = "IDENTIFY")]

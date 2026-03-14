@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(PartialEq, Eq)]
 pub struct NombreUsuario(pub String);
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct NombreCuarto(pub String);
 
 
