@@ -1,6 +1,7 @@
 use common::nombres::NombreUsuario;
 use tokio::net::TcpStream;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::sync::mpsc::Sender;
 // use tokio::sync::broadcast;
 use std::sync::Arc;
 use crate::estado_chat::EstadoChat;
@@ -35,14 +36,22 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                 println!("Cliente: {}", linea.trim_end());
 
                 if peticion? == 0 {
+                    elimina_usuario(estado.clone(), &mut usuario_actual, tx_usuario.clone()).await;
                     break;
                 }
 
+                //Desconectamos al cliente si manda un json inválido
                 let msg = match maneja_json::serializa_json_cliente(&linea) {
                     Ok(m) => m,
-                    Err(e) => {
-                        eprintln!("JSON inválido: {}", e);
-                        continue;
+                    Err(_) => {
+                        // eprintln!("JSON inválido: {}", e);
+                        // continue;
+                        let respuesta_json = maneja_json::deserializa_json_servidor(MensajesServidor::Response {
+                            operation: ("INVALID".to_string()),
+                            result: ("INVALID".to_string()),
+                            extra: (None) })?;
+                        writer.write_all(format!("{}\n", respuesta_json).as_bytes()).await?;
+                        break;
                     }
                 };
 
@@ -77,7 +86,6 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                 let mensaje: String = maneja_json::deserializa_json_servidor(evento.mensaje)?;
                 
                 match &usuario_actual {
-                    
                     Some(usuario) => {
                         if *usuario != evento.autor {
                             writer.write_all(
@@ -85,7 +93,6 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                             ).await?;
                         }
                     }
-
                     None => {
                         writer.write_all(
                             format!("{}\n", mensaje).as_bytes()
@@ -111,3 +118,29 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
 
     Ok(())
 }
+
+//hace el proceso de desconexión del usuario en caso de que el cliente cierre su conexión sin avisar al servidor. Arreglar el envío de mensajes a los demás
+async fn elimina_usuario(estado: Arc<EstadoChat>, usuario_actual: &mut Option<NombreUsuario>, tx_destino: Sender<EventoChat>) {
+    let mut usuarios = estado.diccionario_usuarios.write().await;
+    
+    let mut mapa = estado.forma_mandar_mensajes.write().await;
+    
+    let usuario = match usuario_actual {
+        Some(user) => user,
+        //arreglar esto
+        None => &NombreUsuario("".to_string()),
+    };
+            
+    //borrar el usuario del diccionario
+    usuarios.remove(usuario);
+    mapa.remove(usuario);
+    
+    let _ = tx_destino.send(EventoChat{
+        autor: usuario.clone(),
+        destino: None,
+        mensaje: MensajesServidor::Disconnected {
+            username: (usuario.clone()) },
+    }).await;
+    
+}
+

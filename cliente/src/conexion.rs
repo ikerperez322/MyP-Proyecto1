@@ -34,26 +34,6 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
     let mut input = BufReader::new(entrada_estandar);
     let mut linea = String::new();
 
-    //identificando al usuario
-    // input.read_line(&mut linea).await?;
-
-    
-    
-    // let nombre: MensajesServidor = mensajes_cliente::identifica_cliente(linea.trim());
-    //println!("{}", maneja_json::deserializa_json_servidor(nombre)?);
-    // let json: String = format!("{}\n", maneja_json::deserializa_json_servidor(nombre)?);
-
-    // let json: String = format!("{}\n", acciones_cliente::identificarse(linea.trim().to_string())?);
-    // println!("{}", json);    
-    // escritor.write_all(json.as_bytes()).await?;
-
-    // let accion = acciones_cliente::accion_cliente(determinar_accion(linea.clone()))?;
-    // let json = format!("{}\n", accion);
-    // println!("{}", json);
-    
-    // escritor.write_all(json.as_bytes()).await?;
-    // determinar_accion(linea.clone());
-    
     loop {
 
         linea.clear();
@@ -79,15 +59,14 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
         
         if let Some(valor) = accion {
             let json = format!("{}\n", valor);
-            println!("{}", json);
+            println!("{}", json.trim_end());
            
-
-            escritor.write_all(json.as_bytes()).await?;
+            escritor.write_all(format!("{}\n", valor).as_bytes()).await?;
         } else {
             continue;
         }
         
-
+        
     }
 
     Ok(())
