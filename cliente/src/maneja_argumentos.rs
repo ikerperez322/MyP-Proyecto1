@@ -6,22 +6,6 @@ use common::status::Status;
 //método que recibe la linea que ingreso el usuario (previamente verificada) y determina a que accion del cliente corresponde, regresa un struct indicando que accion quiere realizar el usuario
 pub fn determinar_accion(linea: String) -> AccionCliente {
 
-    // let palabras: Vec<&str> = linea.split_whitespace().collect();
-
-    // let accion: &str = match palabras.get(0) {
-    //     Some(a) => a,
-    //     None => "none",
-    // };
-
-    // let accion_normalizado = accion.to_lowercase()
-    //     .replace("\n", "")
-    //     .replace("\r", "")
-    //     .replace(" ", "")
-    //     .replace(":", "")
-    //     .replace("_", "");
-
-    // let a = accion_normalizado.as_str();
-
     let mut args: Vec<String> = Vec::new();
     
     match verifica_linea(linea) {
@@ -46,14 +30,8 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 Some(n) => n,
                 None => "",
             };
-
-            // if nombre == "" {
-            //     println!("Se necesita un username para identificarse.");
-            // } else {
-            //     accion_struct = AccionCliente::Identificarse { nombre: (nombre.to_string()) };
-            // }
             accion_struct = AccionCliente::Identificarse { nombre: (nombre.to_string()) };
-            println!("Quieres identificarte.");
+            // println!("Quieres identificarte.");
         },
         "cambiarestado" => {
             let nuevo_status: &str = match args.get(1) {
@@ -73,11 +51,11 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
             }else if status_normalizado == "away" {
                 accion_struct = AccionCliente::CambiarEstado { nuevo_status: (Status::AWAY) };
             }
-            println!("Quieres cambiar de estado.");
+            // println!("Quieres cambiar de estado.");
         },
         "listausuarios" => {
             accion_struct = AccionCliente::PedirListaUsuarios {  };
-            println!("Quieres la lista de usuarios.");
+            // println!("Quieres la lista de usuarios.");
         },
         "textoprivado" => {
             let destinatario: &str = match args.get(1) {
@@ -92,7 +70,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 texto: (texto.to_string()),
                 destinatario: (destinatario.to_string())
             };
-            println!("Quieres mandar un texto privado.");
+            // println!("Quieres mandar un texto privado.");
         },
         "textopublico" => {
             let texto: &str = match args.get(1) {
@@ -100,7 +78,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::MandaTextoPublico { texto: (texto.to_string()) };
-            println!("Quieres mandar un texto público.");
+            // println!("Quieres mandar un texto público.");
         },
         "creacuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -108,7 +86,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::CreaCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            println!("Quieres crear un cuarto.");
+            // println!("Quieres crear un cuarto.");
         },
         //-------------------ARREGLAR ESTE CASO---------------------------------------------
         "invitacuarto" => {
@@ -127,7 +105,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 nombre_cuarto: (nombre_cuarto.to_string()),
                 usuarios: (nombres_usuarios),
             };
-            println!("Quieres invitar gente a un cuarto.");
+            // println!("Quieres invitar gente a un cuarto.");
         },
         "unirsecuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -135,7 +113,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::UnirseCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            println!("Quieres unirte a un cuarto.");
+            // println!("Quieres unirte a un cuarto.");
         },
         "usuarioscuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -143,7 +121,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::PedirUsuariosCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            println!("Quieres obtener la lista de usuarios del cuarto.");
+            // println!("Quieres obtener la lista de usuarios del cuarto.");
         },
         "textocuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -155,7 +133,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::MandaTextoCuarto { nombre_cuarto: (nombre_cuarto.to_string()), texto: (texto.to_string()) };
-            println!("Quieres mandar un mensaje al cuarto.");
+            // println!("Quieres mandar un mensaje al cuarto.");
         },
         "abandonacuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -163,47 +141,25 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::AbandonaCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            println!("Quieres abandonar el cuarto.");
+            // println!("Quieres abandonar el cuarto.");
         },
         "desconectarse" => {
             accion_struct = AccionCliente::Desconectarse {  };
-            println!("Quieres desconectarte.");
+            // println!("Quieres desconectarte.");
         },
         _ => {
             accion_struct = AccionCliente::AccionInvalida {  };
             println!("Pusiste una acción inválida.");
         },
     }
-
-    
-    // if accion.trim() == "identificarse" {
-    //     println!("Te quieres identificar");
-    // }
-
-    
-    
-    // println!("Palabras extraídas: {:?}", palabras);
-
-    // println!("Primer palabra: {:?}", palabras.get(0));
-    
-    // todo!("Implementar función");
-
-    // if matches!(accion_struct, AccionCliente::AccionInvalida {  }) {
-    //     return Err("Es una acción inválida".into());
-    // }else {
     return accion_struct;
-    // }
-    
 }
 
 
 //funcion que verifica que lo que ingreso el usuario sea válido
 fn verifica_linea(linea: String) -> Result<Vec<String>, Box<dyn std::error::Error>> {
 
-    // let palabras: Vec<&str> = linea.split_whitespace().collect();
     let palabras: Vec<&str> = linea.splitn(3, ' ').collect();
-    
-    // let instruccion: &str = palabras.get(0)?;
 
     let arg: bool = match palabras.get(0) {
         Some(_) => true,
@@ -265,9 +221,7 @@ fn verifica_linea(linea: String) -> Result<Vec<String>, Box<dyn std::error::Erro
             } 
         }
     }
-    
     //los demás elementos del vector son los argumentos de la acción a realizar (el texto es lo último)
-    
     return Ok(instrucciones);
 }
 
@@ -283,7 +237,6 @@ fn verifica_instruccion(linea: String) -> Result<String, Box<dyn std::error::Err
 
     let a = accion_normalizado.as_str();
 
-    
     match a {
         "identificarse" => {
             return Ok("identificarse".to_string());
@@ -334,9 +287,12 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
     
     match instruccion.as_str() {
         "identificarse" => {
-            
             match args.get(1) {
                 Some(nombre) => {
+                    //determina si el usuario cumple con el requisito de máximo 8 caracteres
+                    if nombre.chars().count() > 9 {
+                        return Err(String::from("No se permiten nombres de usuarios de más de 8 caracteres.").into());
+                    }                    
                     argumentos.push(nombre.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 }
@@ -352,9 +308,6 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
                 None => Err(String::from("Se necesita un estado.").into()),
             }
         },
-        // "listausuarios" => {
-            
-        // },
         "textoprivado" => {
             let mut username: String = String::new();
             let mut mensaje: String = String::new();
@@ -394,6 +347,10 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
         "creacuarto" => {
             match args.get(1) {
                 Some(nombre_cuarto) => {
+                    //checa que el número de caracteres del cuarto no sobrepase los 16
+                    if nombre_cuarto.chars().count() > 17 {
+                        return Err(String::from("No se permiten nombres de cuarto de más de 16 caracteres.").into());
+                    }
                     argumentos.push(nombre_cuarto.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 },
@@ -491,8 +448,6 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
 //función que recibe el segundo argumento de invitaCuarto y devuelve un vector cuyos elementos son los usernames de los usuarios a invitar
 //(toma en cuenta la separación por comas ',' por lo que todo lo que no esté separado por comas lo tomará como un único usuario)
 fn saca_usuarios(argumentos: String) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-
-    // let usernames: Vec<String>;
 
     if !argumentos.contains('[') || !argumentos.contains(']') {
         return Err("Se necesitan corchetes para indicar la lista de usuarios".into());
