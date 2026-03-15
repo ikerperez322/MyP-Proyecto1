@@ -1,13 +1,13 @@
 use common::nombres::NombreUsuario;
 use tokio::net::TcpStream;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::sync::broadcast;
+// use tokio::sync::broadcast;
 use std::sync::Arc;
 use crate::estado_chat::EstadoChat;
 use crate::evento_servidor::EventoChat;
 use crate::manejador_mensajes;
 use common::maneja_json;
-use common::protocolo::MensajesCliente;
+use common::protocolo::{MensajesServidor, MensajesCliente};
 
 
 //método que lee lo que manda el cliente y serializa, deserializa json y envía las respuestas al cliente
@@ -48,12 +48,23 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
 
                 if let Some(respuesta) = manejador_mensajes::procesa_mensaje(&msg, estado.clone(), &mut usuario_actual, tx_usuario.clone()).await {
 
-                    let respuesta_json = maneja_json::deserializa_json_servidor(respuesta)?;
+                    let respuesta_json = maneja_json::deserializa_json_servidor(respuesta.clone())?;
                     println!("Servidor: {}", respuesta_json.trim_end());
                     // let respuesta = format!("{}", respuesta_json);
                     writer.write_all(format!("{}\n", respuesta_json).as_bytes()).await?;
-                }
 
+                    //checamos si la respuesta del servidor fue que el cliente no se ha identificado para desconectarlo
+                    match respuesta {
+                        MensajesServidor::Response {operation: _, result, extra: _} => {
+                            if result == "NOT_IDENTIFIED" {
+                                println!("Cliente no se identificó y quiso realizar otra operación.");
+                                break;
+                            }
+                        },
+                        _ => {},
+                    }
+                }
+                                
                 if let MensajesCliente::Disconnect {} = msg {
                     println!("Cliente solicitó desconectarse.");
                     break;

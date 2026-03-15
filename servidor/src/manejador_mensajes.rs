@@ -10,18 +10,18 @@ use crate::{estado_chat::EstadoChat, usuario::Usuario};
 
 //método que maneja cada posible mensaje que le puede llegar por parte del cliente
 pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<EstadoChat>, usuario_actual: &mut Option<NombreUsuario>, sender: tokio::sync::mpsc::Sender<EventoChat>) -> Option<MensajesServidor> {
+    
     match mensaje_recibido {
-        
         MensajesCliente::Identify { username } => {
 
             let mut usuarios = estado.diccionario_usuarios.write().await;
             
-            //checamos que el cliente no se quiera volver a identificar
+            //checamos que el cliente no se quiera volver a identificar desde la misma dirección
             if usuario_actual.is_some() {
                 return None;
                 //usuario ya existe
             } else if usuarios.contains_key(&username) {
-                return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("USER_ALREADY_EXISTS".to_string()), extra: (username.0.clone()) });
+                return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("USER_ALREADY_EXISTS".to_string()), extra: (Some(username.0.clone())) });
                 //usuario no existe, el usuario se identifica con éxito
             }else {
 
@@ -40,19 +40,24 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                     username: (username.clone()) },
                     estado.clone());
                 
-                return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("SUCCESS".to_string()), extra: (username.0.clone()) });
+                return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("SUCCESS".to_string()), extra: (Some(username.0.clone())) });
             }
 
         }
         MensajesCliente::Status { status } => {
 
-            let mut usuarios = estado.diccionario_usuarios.write().await;
-
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
-                None => return None,
-            };
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };            
+            
+            let mut usuarios = estado.diccionario_usuarios.write().await;
 
             let mut usuario_encontrado: bool = false;
 
@@ -70,12 +75,18 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                         status: (status.clone()) },
                     estado.clone());
                 
-            }
-                     
+            }                     
             return None;
         }
         MensajesCliente::Users {  } => {
 
+            if usuario_actual.is_none() {
+                return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+            }
+            
             let usuarios = estado.diccionario_usuarios.read().await;
 
             let mut lista_usuarios: HashMap<NombreUsuario, Status> = HashMap::new();
@@ -90,17 +101,22 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
         }
         MensajesCliente::Text { username, text } => {
 
+            let usuario = match usuario_actual {
+                    Some(user) => user,
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };
+            
             let tx_destino = {
                 let mapa = estado.forma_mandar_mensajes.read().await;
                 mapa.get(&username).cloned()
             };
 
             if let Some(tx_destino) = tx_destino {
-
-                let usuario = match usuario_actual {
-                    Some(user) => user,
-                    None => return None,
-                };
 
                 envia_mensajes_secundarios_privados(usuario.clone(), Some(username.clone()), MensajesServidor::TextFrom {
                     username: (usuario.clone()),
@@ -110,11 +126,10 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 return None;
 
             } else {
-
                 return Some(MensajesServidor::Response {
                     operation: "TEXT".to_string(),
                     result: "NO_SUCH_USER".to_string(),
-                    extra: username.0.to_string(),
+                    extra: Some(username.0.to_string()),
                 });
             }            
         }
@@ -123,7 +138,12 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
-                None => return None,
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
             };
 
             envia_mensajes_secundarios_publicos(usuario.clone(), None,
@@ -135,21 +155,81 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             return None;
         }
         MensajesCliente::NewRoom { roomname } => {
+            let usuario = match usuario_actual {
+                Some(user) => user,
+                //arreglar esto
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };
             todo!("Implementar las respuestas del servidor");
         }
         MensajesCliente::Invite { roomname, usernames } => {
+            let usuario = match usuario_actual {
+                Some(user) => user,
+                //arreglar esto
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };
             todo!("Implementar las respuestas del servidor");
         }
         MensajesCliente::JoinRoom { roomname } => {
+            let usuario = match usuario_actual {
+                Some(user) => user,
+                //arreglar esto
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };
             todo!("Implementar las respuestas del servidor");
         }
         MensajesCliente::RoomUsers { roomname } => {
+            let usuario = match usuario_actual {
+                Some(user) => user,
+                //arreglar esto
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };
             todo!("Implementar las respuestas del servidor");
         }
         MensajesCliente::RoomText { roomname, text } => {
+            let usuario = match usuario_actual {
+                Some(user) => user,
+                //arreglar esto
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };
             todo!("Implementar las respuestas del servidor");
         }
         MensajesCliente::LeaveRoom { roomname } => {
+            let usuario = match usuario_actual {
+                Some(user) => user,
+                //arreglar esto
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
+            };
             todo!("Implementar las respuestas del servidor");
         }
         MensajesCliente::Disconnect {  } => {
@@ -161,7 +241,12 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
-                None => return None,
+                None => {
+                    return Some(MensajesServidor::Response{
+                        operation: ("INVALID".to_string()),
+                        result: ("NOT_IDENTIFIED".to_string()),
+                        extra: (None) });
+                },
             };
 
             

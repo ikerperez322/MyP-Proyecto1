@@ -70,7 +70,8 @@ pub enum MensajesServidor {
     Response {
         operation: String,
         result: String,
-        extra: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        extra: Option<String>,
     },
     #[serde(rename = "NEW_USER")]
     NewUser {
