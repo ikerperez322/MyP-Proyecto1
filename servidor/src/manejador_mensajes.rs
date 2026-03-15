@@ -5,6 +5,7 @@ use common::protocolo::{MensajesCliente, MensajesServidor};
 use common::status::Status;
 use tokio::sync::mpsc::Sender;
 
+use crate::cuarto::Cuarto;
 use crate::evento_servidor::EventoChat;
 use crate::{estado_chat::EstadoChat, usuario::Usuario};
 
@@ -19,29 +20,31 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             //checamos que el cliente no se quiera volver a identificar desde la misma dirección
             if usuario_actual.is_some() {
                 return None;
-                //usuario ya existe
-            } else if usuarios.contains_key(&username) {
+            }
+            //usuario ya existe
+            if usuarios.contains_key(&username) {
                 return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("USER_ALREADY_EXISTS".to_string()), extra: (Some(username.0.clone())) });
                 //usuario no existe, el usuario se identifica con éxito
-            }else {
-
-                let mut mensajes_usuarios = estado.forma_mandar_mensajes.write().await;
-                mensajes_usuarios.insert(username.clone(), sender);
-                
-                usuarios.insert(username.clone(), Usuario{
-                    username: username.clone(),
-                    status: Status::ACTIVE,
-                    cuartos: LinkedList::new(),
-                });
-                *usuario_actual = Some(username.clone());
-
-                envia_mensajes_secundarios_publicos(username.clone(), None,
-                    MensajesServidor::NewUser {
-                    username: (username.clone()) },
-                    estado.clone());
-                
-                return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("SUCCESS".to_string()), extra: (Some(username.0.clone())) });
             }
+            // {
+
+            let mut mensajes_usuarios = estado.forma_mandar_mensajes.write().await;
+            mensajes_usuarios.insert(username.clone(), sender);
+                
+            usuarios.insert(username.clone(), Usuario{
+                username: username.clone(),
+                status: Status::ACTIVE,
+                cuartos: LinkedList::new(),
+            });
+            *usuario_actual = Some(username.clone());
+
+            envia_mensajes_secundarios_publicos(username.clone(), None,
+                MensajesServidor::NewUser {
+                    username: (username.clone()) },
+                estado.clone());
+                
+            return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("SUCCESS".to_string()), extra: (Some(username.0.clone())) });
+            // }
 
         }
         MensajesCliente::Status { status } => {
@@ -82,9 +85,9 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             if usuario_actual.is_none() {
                 return Some(MensajesServidor::Response{
-                        operation: ("INVALID".to_string()),
-                        result: ("NOT_IDENTIFIED".to_string()),
-                        extra: (None) });
+                    operation: ("INVALID".to_string()),
+                    result: ("NOT_IDENTIFIED".to_string()),
+                    extra: (None) });
             }
             
             let usuarios = estado.diccionario_usuarios.read().await;
@@ -102,7 +105,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
         MensajesCliente::Text { username, text } => {
 
             let usuario = match usuario_actual {
-                    Some(user) => user,
+                Some(user) => user,
                 None => {
                     return Some(MensajesServidor::Response{
                         operation: ("INVALID".to_string()),
@@ -155,6 +158,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             return None;
         }
         MensajesCliente::NewRoom { roomname } => {
+            
             let usuario = match usuario_actual {
                 Some(user) => user,
                 //arreglar esto
@@ -165,7 +169,25 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                         extra: (None) });
                 },
             };
-            todo!("Implementar las respuestas del servidor");
+
+            let mut cuartos = estado.diccionario_cuartos.write().await;
+
+            if cuartos.contains_key(&roomname) {
+                return Some(MensajesServidor::Response {
+                    operation: ("NEW_ROOM".to_string()),
+                    result: ("ROOM_ALREADY_EXISTS".to_string()),
+                    extra: (Some(roomname.0.clone())) });
+            }
+
+            cuartos.insert(roomname.clone(), Cuarto {
+                nombre: roomname.clone(),
+                lista_usuarios: LinkedList::new(),
+            });
+
+            return Some(MensajesServidor::Response {
+                operation: ("NEW_ROOM".to_string()),
+                result: ("SUCCESS".to_string()),
+                extra: (Some(roomname.0.clone())) });
         }
         MensajesCliente::Invite { roomname, usernames } => {
             let usuario = match usuario_actual {
