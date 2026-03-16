@@ -19,7 +19,10 @@ fn test_parse_response_json() {
         MensajesServidor::Response { operation, result, extra } => {
             assert_eq!(operation, &"IDENTIFY".to_string());
             assert_eq!(result, &"SUCCESS".to_string());
-            assert_eq!(extra, &"Kimberly");
+            assert_eq!(match extra {
+                Some(e) => e,
+                None => panic!("Error encontrando extra."),
+            }, &"Kimberly");
         }
         _ => panic!("Cadena json incorrecta"),
     }
@@ -139,6 +142,28 @@ fn test_parse_public_text_from_json() {
             assert_eq!(text, "¡Hola todos!");
         }
         _ => panic!("Cadena json incorrecta"),
+    }
+
+    let cadena: String = match deserializa_json_servidor(mensaje) {
+        Ok(msg) => msg,
+        Err(e) => panic!("Error deserializando json: {}", e),
+    };
+    assert_eq!(json.to_string(), cadena);
+}
+
+#[test]
+fn test_parse_invitation_json() {
+    let json = r#"{"type":"INVITATION","username":"Kimberly","roomname":"Sala 1"}"#;
+    let mensaje: MensajesServidor = match serializa_json_servidor(json) {
+        Ok(msg) => msg,
+        Err(e) => panic!("Error serializando json: {}", e),
+    };
+    match &mensaje {
+        MensajesServidor::Invitation { username, roomname } => {
+            assert_eq!(username.0, "Kimberly");
+            assert_eq!(roomname.0, "Sala 1");
+        }
+        _ => panic!("Cadena json incorrecta."),
     }
 
     let cadena: String = match deserializa_json_servidor(mensaje) {
