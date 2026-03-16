@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::sync::{RwLock, mpsc};
 use tokio::sync::broadcast::Sender;
 use crate::{cuarto::Cuarto, evento_servidor::EventoChat};
@@ -9,8 +10,8 @@ use common::nombres::{NombreUsuario, NombreCuarto};
 
 //struct que guarda el diccionario con los usuarios conectados y los cuartos existentes además de guardar cómo enviar mensajes a los usuarios conectados
 pub struct EstadoChat {
-    pub diccionario_usuarios: RwLock<HashMap<NombreUsuario, Usuario>>,
-    pub diccionario_cuartos: RwLock<HashMap<NombreCuarto, Cuarto>>,
+    pub diccionario_usuarios: RwLock<HashMap<NombreUsuario, Arc<RwLock<Usuario>>>>,
+    pub diccionario_cuartos: RwLock<HashMap<NombreCuarto, Arc<RwLock<Cuarto>>>>,
     pub forma_mandar_mensajes: RwLock<HashMap<NombreUsuario, mpsc::Sender<EventoChat>>>,
     pub tx: Sender<EventoChat>,
 }

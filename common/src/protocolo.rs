@@ -96,6 +96,11 @@ pub enum MensajesServidor {
         username: NombreUsuario,
         text: String,
     },
+    #[serde(rename = "INVITATION")]
+    Invitation {
+        username: NombreUsuario,
+        roomname: NombreCuarto,
+    },
     #[serde(rename = "JOINED_ROOM")]
     JoinedRoom {
         roomname: NombreCuarto,

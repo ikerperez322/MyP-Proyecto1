@@ -1,4 +1,6 @@
 use std::collections::LinkedList;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use common::nombres::NombreUsuario;
 use common::status::Status;
 use crate::cuarto::Cuarto;
@@ -8,5 +10,5 @@ use crate::cuarto::Cuarto;
 pub struct Usuario {
     pub username: NombreUsuario,
     pub status: Status,
-    pub cuartos: LinkedList<Cuarto>,
+    pub cuartos: LinkedList<Arc<RwLock<Cuarto>>>,
 }

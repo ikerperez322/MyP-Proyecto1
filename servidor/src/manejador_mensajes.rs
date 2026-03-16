@@ -3,6 +3,7 @@ use std::collections::{HashMap, LinkedList};
 use common::nombres::NombreUsuario;
 use common::protocolo::{MensajesCliente, MensajesServidor};
 use common::status::Status;
+use tokio::sync::RwLock;
 use tokio::sync::mpsc::Sender;
 
 use crate::cuarto::Cuarto;
@@ -23,7 +24,10 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             }
             //usuario ya existe
             if usuarios.contains_key(&username) {
-                return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("USER_ALREADY_EXISTS".to_string()), extra: (Some(username.0.clone())) });
+                return Some(MensajesServidor::Response {
+                    operation: ("IDENTIFY".to_string()),
+                    result: ("USER_ALREADY_EXISTS".to_string()),
+                    extra: (Some(username.0.clone())) });
                 //usuario no existe, el usuario se identifica con éxito
             }
             // {
@@ -31,11 +35,11 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             let mut mensajes_usuarios = estado.forma_mandar_mensajes.write().await;
             mensajes_usuarios.insert(username.clone(), sender);
                 
-            usuarios.insert(username.clone(), Usuario{
+            usuarios.insert(username.clone(), Arc::new(RwLock::new(Usuario{
                 username: username.clone(),
                 status: Status::ACTIVE,
                 cuartos: LinkedList::new(),
-            });
+            })));
             *usuario_actual = Some(username.clone());
 
             envia_mensajes_secundarios_publicos(username.clone(), None,
@@ -43,7 +47,10 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                     username: (username.clone()) },
                 estado.clone());
                 
-            return Some(MensajesServidor::Response { operation: ("IDENTIFY".to_string()), result: ("SUCCESS".to_string()), extra: (Some(username.0.clone())) });
+            return Some(MensajesServidor::Response {
+                operation: ("IDENTIFY".to_string()),
+                result: ("SUCCESS".to_string()),
+                extra: (Some(username.0.clone())) });
             // }
 
         }
@@ -58,27 +65,46 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                         result: ("NOT_IDENTIFIED".to_string()),
                         extra: (None) });
                 },
-            };            
+            };   
             
-            let mut usuarios = estado.diccionario_usuarios.write().await;
+            let usuarios = estado.diccionario_usuarios.read().await;
 
-            let mut usuario_encontrado: bool = false;
+            let instancia_usuario = match usuarios.get(&usuario) {
+                Some(usr) => Arc::clone(usr),
+                None => return None,
+            };
 
-            for (llave, user) in usuarios.iter_mut() {
-                if llave == usuario {
-                    user.status = status.clone();
-                    usuario_encontrado = true;
-                }
+            drop(usuarios);
+
+            {
+                let mut user_lock = instancia_usuario.write().await;
+                user_lock.status = status.clone();
             }
+
+            envia_mensajes_secundarios_publicos(usuario.clone(),
+                None,
+                MensajesServidor::NewStatus {
+                    username: (usuario.clone()),
+                    status: (status.clone()) },
+                estado.clone());
             
-            if usuario_encontrado == true {
-                envia_mensajes_secundarios_publicos(usuario.clone(), None,
-                    MensajesServidor::NewStatus {
-                        username: (usuario.clone()),
-                        status: (status.clone()) },
-                    estado.clone());
+            // let mut usuario_encontrado: bool = false;
+            
+            // for (llave, user) in usuarios.iter_mut() {
+            //     if llave == usuario {
+            //         user.status = status.clone();
+            //         usuario_encontrado = true;
+            //     }
+            // }
+            
+            // if usuario_encontrado == true {
+            //     envia_mensajes_secundarios_publicos(usuario.clone(), None,
+            //         MensajesServidor::NewStatus {
+            //             username: (usuario.clone()),
+            //             status: (status.clone()) },
+            //         estado.clone());
                 
-            }                     
+            // }          
             return None;
         }
         MensajesCliente::Users {  } => {
@@ -89,13 +115,14 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                     result: ("NOT_IDENTIFIED".to_string()),
                     extra: (None) });
             }
-            
+ 
             let usuarios = estado.diccionario_usuarios.read().await;
 
             let mut lista_usuarios: HashMap<NombreUsuario, Status> = HashMap::new();
             
             for (llave, user) in usuarios.iter() {
-                lista_usuarios.insert(llave.clone(), user.status.clone());
+                let user_arc = user.read().await;
+                lista_usuarios.insert(llave.clone(), user_arc.status.clone());
             }
             
             return Some(MensajesServidor::UserList {
@@ -179,11 +206,30 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                     extra: (Some(roomname.0.clone())) });
             }
 
-            cuartos.insert(roomname.clone(), Cuarto {
-                nombre: roomname.clone(),
-                lista_usuarios: LinkedList::new(),
-            });
+            let usuarios = estado.diccionario_usuarios.read().await;
 
+            //una instancia del usuario actual para agregar el cuarto a la lista de cuartos donde el usuario anda metido
+            let instancia_usuario = match usuarios.get(&usuario) {
+                Some(usr) => Arc::clone(usr),
+                None => return None,
+            };
+
+            drop(usuarios);
+
+            let mut lista = LinkedList::new();
+            lista.push_back(Arc::clone(&instancia_usuario));
+            
+            let cuarto_nuevo = Arc::new( RwLock::new(Cuarto {
+                nombre: roomname.clone(),
+                lista_usuarios: lista}));
+            
+            {
+                let mut usuario_lock = instancia_usuario.write().await;
+                usuario_lock.cuartos.push_back(Arc::clone(&cuarto_nuevo));
+            }
+
+            cuartos.insert(roomname.clone(), Arc::clone(&cuarto_nuevo));
+            
             return Some(MensajesServidor::Response {
                 operation: ("NEW_ROOM".to_string()),
                 result: ("SUCCESS".to_string()),
@@ -198,9 +244,45 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                         operation: ("INVALID".to_string()),
                         result: ("NOT_IDENTIFIED".to_string()),
                         extra: (None) });
-                },
+                },                
             };
-            todo!("Implementar las respuestas del servidor");
+
+            let cuartos = estado.diccionario_cuartos.read().await;
+
+            //el cuarto no existe
+            if !cuartos.contains_key(&roomname) {
+                return Some(MensajesServidor::Response {
+                    operation: ("INVITE".to_string()),
+                    result: ("NO_SUCH_ROOM".to_string()),
+                    extra: (Some(roomname.0.clone())) });
+            }
+            
+            let usuarios = estado.diccionario_usuarios.read().await;
+
+            //uno o más usuarios no existen
+            for usr in usernames.iter() {
+                if !usuarios.contains_key(usr) {
+                    return Some(MensajesServidor::Response {
+                        operation: ("INVITE".to_string()),
+                        result: ("NO_SUCH_USER".to_string()),
+                        extra: (Some(usr.0.clone())) });
+                }
+                let tx_destino = {
+                    let mapa = estado.forma_mandar_mensajes.read().await;
+                    mapa.get(usr).cloned()
+                };
+
+                if let Some(tx_destino) = tx_destino {
+                    envia_mensajes_secundarios_privados(
+                    usr.clone(),
+                    Some(usr.clone()),
+                    MensajesServidor::Invitation {
+                        username: (usuario.clone()),
+                        roomname: (roomname.clone()) },
+                    tx_destino).await;
+                }   
+            }
+            return None;
         }
         MensajesCliente::JoinRoom { roomname } => {
             let usuario = match usuario_actual {
@@ -298,6 +380,7 @@ fn envia_mensajes_secundarios_publicos(autor: NombreUsuario, destino: Option<Nom
     });
 }
 
+//envia mensajes solo a un usuario previamente especificado (no a todos)
 async fn envia_mensajes_secundarios_privados(autor: NombreUsuario, destino: Option<NombreUsuario>, mensaje: MensajesServidor, tx_destino: Sender<EventoChat>) {
 
     let _ = tx_destino.send(EventoChat{
