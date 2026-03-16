@@ -1,4 +1,4 @@
-use std::io::Write;
+// use std::io::Write;
 use std::sync::Arc;
 use std::collections::{HashMap, HashSet, LinkedList};
 use common::nombres::NombreUsuario;
@@ -310,12 +310,12 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
                 if let Some(tx_destino) = tx_destino {
                     envia_mensajes_secundarios_privados(
-                    usr.clone(),
-                    Some(usr.clone()),
-                    MensajesServidor::Invitation {
-                        username: (usuario.clone()),
-                        roomname: (roomname.clone()) },
-                    tx_destino).await;
+                        usr.clone(),
+                        Some(usr.clone()),
+                        MensajesServidor::Invitation {
+                            username: (usuario.clone()),
+                            roomname: (roomname.clone()) },
+                        tx_destino).await;
                 }
             }
             return None;
@@ -368,6 +368,7 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                         extra: (Some(roomname.0.clone())) });
                 }
                 usuario_lock.invitaciones_cuartos.remove(&roomname);
+                usuario_lock.cuartos.push_back(instancia_cuarto.clone());
             }
 
             //agregamos al usuario a la lista de usuarios del cuarto
@@ -549,9 +550,9 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
         }
         MensajesCliente::Disconnect {  } => {
 
-            let mut usuarios = estado.diccionario_usuarios.write().await;
+            // let mut usuarios = estado.diccionario_usuarios.write().await;
 
-            let mut mapa = estado.forma_mandar_mensajes.write().await;
+            // let mut mapa = estado.forma_mandar_mensajes.write().await;
             
             let usuario = match usuario_actual {
                 Some(user) => user,
@@ -564,36 +565,62 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 },
             };
 
+            let instancia_usuario = {
+                let usuarios = estado.diccionario_usuarios.read().await;
+                usuarios.get(&usuario).cloned()
+            };
 
-            // let cuartos = estado.diccionario_cuartos.read().await;
-            // let usuarios = estado.diccionario_usuarios.read().await;
+            let instancia_usuario = match instancia_usuario {
+                Some(u) => u,
+                None => return None,
+            };
+            
+            let cuartos_usuario = {
+                let usuario_lock = instancia_usuario.read().await;
+                usuario_lock.cuartos.clone()
+            };
+            
+            //hacemos que el usuario abandonde todos los cuartos donde esté metido (lo eliminamos de la lista de usuarios en todos los cuartos donde esté)
+            for crto in cuartos_usuario.iter() {
+                let (usuarios_cuarto, nombre_cuarto) = {
+                    let mut cuarto_lock = crto.write().await;
+                    cuarto_lock.lista_usuarios.remove(usuario);
 
-            // let instancia_usuario = match usuarios.get(&usuario) {
-            //     Some(usr) => Arc::clone(usr),
-            //     None => return None,
-            // };
-
-            // //hacemos que el usuario abandonde todos los cuartos donde esté metido
-            // {
-            //     let mut usuario_lock = instancia_usuario.read().await;
-
-            //     for crto in usuario_lock.cuartos.iter() {
-
-            //         let instancia_cuarto = match cuartos.get(&crto) {
-            //             Some(crto) => Arc::clone(crto),
-            //             //de una vez checamos que el cuarto exista
-            //             None => return None,
-            //         };
+                    (
+cuarto_lock.lista_usuarios.clone(),
+cuarto_lock.nombre.clone(),
+                    )
+                };
                     
-            //     }
-                
-            // }
-            
-            
-            
-            //borrar el usuario del diccionario
-            usuarios.remove(usuario);
-            mapa.remove(usuario);
+                for usr in usuarios_cuarto.iter() {
+                    let tx_destino = {
+                        let mapa = estado.forma_mandar_mensajes.read().await;
+                        mapa.get(usr).cloned()
+                    };
+                    if let Some(tx_destino) = tx_destino {
+                        envia_mensajes_secundarios_privados(
+                            usuario.clone(),
+                            Some(usr.clone()),
+                            MensajesServidor::LeftRoom {
+                                roomname: (nombre_cuarto.clone()),
+                                username: (usuario.clone()) },
+                            tx_destino).await;
+                    }
+                }
+            }
+
+
+            //eliminamos al usuario de la lista de usuarios del chat
+            {
+                let mut usuarios = estado.diccionario_usuarios.write().await;
+                usuarios.remove(usuario);
+            }
+
+            //eliminamos al usuario de la forma de mandar mensajes
+            {
+                let mut mapa = estado.forma_mandar_mensajes.write().await;
+                mapa.remove(usuario);
+            }
 
             envia_mensajes_secundarios_publicos(usuario.clone(), None,
                 MensajesServidor::Disconnected {
