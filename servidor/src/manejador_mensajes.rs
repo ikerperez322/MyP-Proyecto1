@@ -353,9 +353,25 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 usuario_lock.cuartos.insert(roomname.clone());
             }
 
-            //agregamos al usuario a la lista de usuarios del cuarto
+            //avisamos a los demás usuarios del cuarto que se ha unido un nuevo usuario al cuarto
             {
                 let mut cuarto_lock = instancia_cuarto.write().await;
+                for usr in cuarto_lock.lista_usuarios.iter() {
+                    let tx_destino = {
+                        let mapa = estado.forma_mandar_mensajes.read().await;
+                        mapa.get(usr).cloned()
+                    };
+                    if let Some(tx_destino) = tx_destino {
+                        envia_mensajes_secundarios_privados(
+                            usuario.clone(),
+                            Some(usr.clone()),
+                            MensajesServidor::JoinedRoom {
+                                roomname: (roomname.clone()),
+                                username: (usuario.clone()) },
+                            tx_destino).await;
+                    }
+                }
+                //agregamos al usuario a la lista de usuarios del cuarto
                 cuarto_lock.lista_usuarios.insert(usuario.clone());
             }
             
