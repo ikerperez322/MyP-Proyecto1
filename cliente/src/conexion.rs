@@ -3,9 +3,10 @@ use tokio::io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 // use crate::acciones_cliente;
 use crate::acciones_cliente;
-// use common::maneja_json;
+use common::maneja_json;
 // use common::protocolo::MensajesServidor;
 use crate::maneja_argumentos;
+use crate::vista_terminal;
 
 //método que lee lo que manda el servidor, por el momento únicamente imprime en la salida estándar lo que va leyendo
 pub async fn leer_servidor(lector: OwnedReadHalf) -> Result<(), Box<dyn std::error::Error>> {
@@ -21,7 +22,16 @@ pub async fn leer_servidor(lector: OwnedReadHalf) -> Result<(), Box<dyn std::err
             break;
         }
 
-        println!("Servidor: {}", linea.trim_end())
+        match maneja_json::serializa_json_servidor(&linea) {
+            Ok(msg) => {
+                println!("{}", vista_terminal::representa_info(msg).trim_end());
+            },
+            Err(e) => {
+                println!("Error serializando respuesta del servidor: {}", e);
+            }
+        };
+
+        // println!("Servidor: {}", linea.trim_end());
     }
     
     Ok(())
@@ -58,8 +68,8 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
         // println!("{}", accion);
         
         if let Some(valor) = accion {
-            let json = format!("{}\n", valor);
-            println!("{}", json.trim_end());
+            // let json = format!("{}\n", valor);
+            // println!("{}", json.trim_end());
            
             escritor.write_all(format!("{}\n", valor).as_bytes()).await?;
         } else {
