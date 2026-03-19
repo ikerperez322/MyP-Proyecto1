@@ -149,7 +149,7 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
         },
         _ => {
             accion_struct = AccionCliente::AccionInvalida {  };
-            println!("Pusiste una acción inválida.");
+            // println!("Pusiste una acción inválida.");
         },
     }
     return accion_struct;
@@ -274,7 +274,10 @@ fn verifica_instruccion(linea: String) -> Result<String, Box<dyn std::error::Err
         "desconectarse" => {
             return Ok("desconectarse".to_string());
         },
-        _ => return Err(String::from("Instrucción inválida.").into()),
+        _ => {
+            // return Ok("instruccion_invalida".to_string());
+            return Err(String::from("Instrucción inválida.").into());
+        }
     }
     
 }

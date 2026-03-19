@@ -49,9 +49,7 @@ pub async fn escribir_servidor(mut escritor: OwnedWriteHalf) -> Result<(), Box<d
         linea.clear();
         
         input.read_line(&mut linea).await?;
-
-        // let accion = acciones_cliente::accion_cliente(determinar_accion(linea.clone()))?;
-        // let accion = acciones_cliente::accion_cliente(maneja_argumentos::determinar_accion(linea.clone()))?;
+        
         if linea.trim() == "exit" {
             break;
         }
