@@ -45,8 +45,8 @@ pub fn representa_info(mensaje_server: MensajesServidor) -> String {
         MensajesServidor::Invitation { username, roomname } => {
             return format!("¡{} TE ESTÁ INVITANDO AL CUARTO!: {}", username.0, roomname.0);
         }
-        MensajesServidor::JoinedRoom { roomname: _, username } => {
-            return format!("¡{} SE HA UNIDO AL CUARTO!", username.0);
+        MensajesServidor::JoinedRoom { roomname , username } => {
+            return format!("¡{} SE HA UNIDO AL CUARTO: {}!", username.0, roomname.0);
         }
         MensajesServidor::RoomUserList { roomname, users } => {
             let mut resultado: String = String::from(format!("USUARIOS DEL CUARTO: {}\n", roomname.0));
@@ -83,7 +83,7 @@ fn match_response(operation: String, result: String, extra: Option<String>) -> S
             if result == "SUCCESS" {
                 return format!("TE HAS IDENTIFICADO EXITOSAMENTE CON EL NOMBRE DE: {}.", username);
             }else {
-                return format!("EL NOMBRE DE USUARIO: {} YA EXISTE. POR FAVOR ESCOGE OTRO.", username);
+                return format!("EL NOMBRE DE USUARIO: {} YA EXISTE. POR FAVOR, ESCOGE OTRO NOMBRE.", username);
             }        
         }
         "TEXT" => {
@@ -93,7 +93,7 @@ fn match_response(operation: String, result: String, extra: Option<String>) -> S
             };
             return format!("EL USUARIO: {} NO EXISTE. NO SE ENVÍO NINGÚN MENSAJE.", username);
         }
-        "NEW ROOM" => {
+        "NEW_ROOM" => {
             let roomname: String = match  extra {
                 Some(rmn) => rmn,
                 None => "".to_string(),
@@ -101,7 +101,7 @@ fn match_response(operation: String, result: String, extra: Option<String>) -> S
             if result == "SUCCESS" {
                 return format!("CUARTO: {} CREADO EXITOSAMENTE.", roomname);
             } else {
-                return format!("EL CUARTO: {} YA EXISTE. POR FAVOR ELIGE OTRO NOMBRE.", roomname);
+                return format!("EL CUARTO: {} YA EXISTE. POR FAVOR, ELIGE OTRO NOMBRE.", roomname);
             }
         }
         "INVITE" => {
