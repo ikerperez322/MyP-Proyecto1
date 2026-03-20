@@ -238,40 +238,40 @@ fn verifica_instruccion(linea: String) -> Result<String, Box<dyn std::error::Err
     let a = accion_normalizado.as_str();
 
     match a {
-        "identificarse" => {
+        "identificarse" | "id" => {
             return Ok("identificarse".to_string());
         },
-        "cambiarestado" => {
+        "cambiarestado" | "ce" => {
             return Ok("cambiarestado".to_string());
         },
-        "listausuarios" => {
+        "listausuarios" | "lu" => {
             return Ok("listausuarios".to_string());
         },
-        "textoprivado" => {
+        "textoprivado" | "tpr" => {
             return Ok("textoprivado".to_string());
         },
-        "textopublico" => {
+        "textopublico" | "tpu" => {
             return Ok("textopublico".to_string());
         },
-        "creacuarto" => {
+        "creacuarto" | "cc" => {
             return Ok("creacuarto".to_string());
         },
-        "invitacuarto" => {
+        "invitacuarto" | "ic" => {
             return Ok("invitacuarto".to_string());
         },
-        "unirsecuarto" => {
+        "unirsecuarto" | "uc" => {
             return Ok("unirsecuarto".to_string());
         },
-        "usuarioscuarto" => {
+        "usuarioscuarto" | "usrc" => {
             return Ok("usuarioscuarto".to_string());
         },
-        "textocuarto" => {
+        "textocuarto" | "tc" => {
             return Ok("textocuarto".to_string());
         },
-        "abandonacuarto" => {
+        "abandonacuarto" | "ac" => {
             return Ok("abandonacuarto".to_string());
         },
-        "desconectarse" => {
+        "desconectarse" | "desc" => {
             return Ok("desconectarse".to_string());
         },
         _ => {
