@@ -32,6 +32,7 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
         tokio::select! {
             
             peticion = reader.read_line(&mut linea) => {
+
                 
                 println!("Cliente: {}", linea.trim_end());
 
@@ -40,6 +41,17 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                     break;
                 }
 
+                //desconectamos al cliente en caso de que quiera mandar un mensaje de más de 1024 bytes
+                if linea.len() > 1024 {
+                    let respuesta_json = maneja_json::deserializa_json_servidor(MensajesServidor::Response {
+                        operation: ("INVALID".to_string()),
+                        result: ("INVALID".to_string()),
+                        extra: (None) })?;
+                    writer.write_all(format!("{}\n", respuesta_json).as_bytes()).await?;
+                    elimina_usuario(estado.clone(), &mut usuario_actual, tx_usuario.clone()).await;
+                    break;
+                }
+                
                 //Desconectamos al cliente si manda un json inválido
                 let msg = match maneja_json::serializa_json_cliente(&linea) {
                     Ok(m) => m,
@@ -51,6 +63,8 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
                             result: ("INVALID".to_string()),
                             extra: (None) })?;
                         writer.write_all(format!("{}\n", respuesta_json).as_bytes()).await?;
+                        //a prueba esto
+                        elimina_usuario(estado.clone(), &mut usuario_actual, tx_usuario.clone()).await;
                         break;
                     }
                 };
@@ -119,7 +133,7 @@ pub async fn maneja_conexion(socket: TcpStream, estado: Arc<EstadoChat>) -> Resu
     Ok(())
 }
 
-//hace el proceso de desconexión del usuario en caso de que el cliente cierre su conexión sin avisar al servidor. Arreglar el envío de mensajes a los demás
+//hace el proceso de desconexión del usuario en caso de que el cliente cierre su conexión sin avisar al servidor o en caso de que el usuario haga algo que haga que el servidor lo termine desconectando. Arreglar el envío de mensajes a los demás
 async fn elimina_usuario(estado: Arc<EstadoChat>, usuario_actual: &mut Option<NombreUsuario>, tx_destino: Sender<EventoChat>) {
     let mut usuarios = estado.diccionario_usuarios.write().await;
     

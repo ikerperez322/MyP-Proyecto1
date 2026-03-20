@@ -21,6 +21,15 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             if usuario_actual.is_some() {
                 return None;
             }
+
+            //checamos que el nombre de usuario no exceda los 8 caracteres
+            if username.0.chars().count() > 9 {
+                return Some(MensajesServidor::Response {
+                    operation: ("INVALID").to_string(),
+                    result: ("INVALID").to_string(),
+                    extra: (None) });
+            }
+            
             //usuario ya existe
             if usuarios.contains_key(&username) {
                 return Some(MensajesServidor::Response {
@@ -182,6 +191,15 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 },
             };
 
+            //checamos que el nombre del cuarto no exceda los 16 caracteres
+            if roomname.0.chars().count() > 17 {
+                return Some(MensajesServidor::Response {
+                    operation: ("INVALID").to_string(),
+                    result: ("INVALID").to_string(),
+                    extra: (None) });
+            }
+
+            
             let instancia_usuario = {
                 let usuarios = estado.diccionario_usuarios.read().await;
                 usuarios.get(&usuario).cloned()

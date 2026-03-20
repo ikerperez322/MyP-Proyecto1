@@ -295,7 +295,7 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
                     //determina si el usuario cumple con el requisito de máximo 8 caracteres
                     if nombre.chars().count() > 9 {
                         return Err(String::from("No se permiten nombres de usuarios de más de 8 caracteres.").into());
-                    }                    
+                    }             
                     argumentos.push(nombre.to_string().replace("\n", ""));
                     return Ok(argumentos);
                 }
