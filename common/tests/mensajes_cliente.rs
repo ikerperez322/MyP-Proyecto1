@@ -1,12 +1,15 @@
 use std::collections::LinkedList;
-// use crate::{nombres::NombreUsuario, status};
-// use super::*;
 use common::protocolo::MensajesCliente;
 use common::maneja_json::{serializa_json_cliente, deserializa_json_cliente};
 use common::status;
 use common::nombres::NombreUsuario;
-//Test_mensajesCliente
-    
+
+/// Verifica la correcta deserialización y serialización de un mensaje `Identify`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_identify_json() {
     let json = r#"{"type":"IDENTIFY","username":"Kimberly"}"#;
@@ -28,6 +31,12 @@ fn test_parse_identify_json() {
     assert_eq!(json.to_string(), cadena); 
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Status`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_status_json() {
     let json = r#"{"type":"STATUS","status":"AWAY"}"#;
@@ -49,6 +58,12 @@ fn test_parse_status_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Users`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_users_json() {
     let json = r#"{"type":"USERS"}"#;
@@ -65,6 +80,12 @@ fn test_parse_users_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Text`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_private_text_json() {
     let json = r#"{"type":"TEXT","username":"Luis","text":"Hola Luis, ¿cómo estás?"}"#;
@@ -86,7 +107,13 @@ fn test_parse_private_text_json() {
     };
     assert_eq!(json.to_string(), cadena);
 }
-    
+
+/// Verifica la correcta deserialización y serialización de un mensaje `Public Text`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_public_text_json() {
     let json = r#"{"type":"PUBLIC_TEXT","text":"¡Hola a todos!"}"#;
@@ -108,6 +135,12 @@ fn test_parse_public_text_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `New Room`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_new_room_json() {
     let json = r#"{"type":"NEW_ROOM","roomname":"Sala 1"}"#;
@@ -129,6 +162,12 @@ fn test_parse_new_room_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Invite`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_invite_json() {
     let json = r#"{"type":"INVITE","roomname":"Sala 1","usernames":["Luis","Antonio","Fernando"]}"#;
@@ -155,6 +194,12 @@ fn test_parse_invite_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Join Room`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_join_room_json() {
     let json = r#"{"type":"JOIN_ROOM","roomname":"Sala 1"}"#;
@@ -176,6 +221,12 @@ fn test_parse_join_room_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Room Users`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_room_users_json() {
     let json = r#"{"type":"ROOM_USERS","roomname":"Sala 1"}"#;
@@ -197,6 +248,12 @@ fn test_parse_room_users_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Room Text`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_room_text_json() {
     let json = r#"{"type":"ROOM_TEXT","roomname":"Sala 1","text":"¡Hola sala 1!"}"#;
@@ -219,6 +276,12 @@ fn test_parse_room_text_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Leave Room`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_leave_room_json() {
     let json = r#"{"type":"LEAVE_ROOM","roomname":"Sala 1"}"#;
@@ -240,6 +303,12 @@ fn test_parse_leave_room_json() {
     assert_eq!(json.to_string(), cadena);
 }
 
+/// Verifica la correcta deserialización y serialización de un mensaje `Disconnect`.
+///
+/// # Descripción
+/// - Convierte un JSON a `MensajesCliente`.
+/// - Valida que los campos coincidan con los valores esperados.
+/// - Serializa nuevamente a JSON y verifica que sea idéntico al original.
 #[test]
 fn test_parse_disconnect_json() {
     let json = r#"{"type":"DISCONNECT"}"#;
