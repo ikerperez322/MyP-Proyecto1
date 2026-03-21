@@ -3,9 +3,14 @@ use std::collections::HashMap;
 use std::collections::LinkedList;
 use crate::status::Status;
 use crate::nombres::{NombreCuarto, NombreUsuario};
-// use serde_json::Result;
 
-//Mensajes que manda el cliente
+/// Mensajes que puede enviar el cliente al servidor.
+///
+/// Este enum define el protocolo de comunicación desde el cliente,
+/// indicando las acciones que desea realizar dentro del sistema de chat.
+///
+/// Cada variante se serializa con un campo `"type"` para identificar
+/// el tipo de operación.
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum MensajesCliente {
@@ -62,7 +67,13 @@ pub enum MensajesCliente {
     },
 }
 
-//Mensajes que manda el servidor
+/// Mensajes que puede enviar el servidor al cliente.
+///
+/// Este enum define las respuestas y eventos generados por el servidor,
+/// incluyendo notificaciones de estado, mensajes y cambios en cuartos.
+///
+/// Cada variante se serializa con un campo `"type"` para identificar
+/// el tipo de mensaje.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum MensajesServidor {
@@ -127,6 +138,4 @@ pub enum MensajesServidor {
         username: NombreUsuario,  
     },
 }
-
-
 

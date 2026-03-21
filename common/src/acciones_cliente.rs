@@ -1,9 +1,14 @@
 use std::collections::LinkedList;
-use crate::{status::Status};
-// use crate::status::Status;
+use crate::status::Status;
 
-// enumeración que contiene todas las posibles acciones a realizar por parte del cliente
-// #[derive(PartialEq, Debug)]
+/// Representa las acciones que puede realizar un cliente dentro del sistema.
+///
+/// Este enum modela las operaciones ya interpretadas a partir de los mensajes
+/// recibidos (por ejemplo, después de deserializar JSON), facilitando la lógica
+/// interna del servidor.
+///
+/// A diferencia de `MensajesCliente`, este enum se utiliza como una
+/// representación más directa de las acciones a ejecutar (cada accion corresponde uno a uno con un struct de Mensajes cliente).
 pub enum AccionCliente {
     Identificarse {
         nombre: String,
@@ -48,6 +53,4 @@ pub enum AccionCliente {
         
     }
 }
-
-
 
