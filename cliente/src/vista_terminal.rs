@@ -1,17 +1,24 @@
 use common::protocolo::MensajesServidor;
 use colored::*;
 
+/// Genera una representación en texto (formateada y con estilos)
+/// de un mensaje proveniente del servidor.
+///
+/// # Descripción
+/// - Convierte un `MensajesServidor` en un `String` listo para mostrarse en consola.
+/// - Aplica formato y colores dependiendo del tipo de mensaje.
+/// - Centraliza toda la lógica de presentación del cliente.
+///
+/// # Parámetros
+/// - `mensaje_server`: mensaje recibido del servidor.
+///
+/// # Regresa
+/// Un `String` formateado que representa el mensaje.
 pub fn representa_info(mensaje_server: MensajesServidor) -> String {
 
     match mensaje_server {
         MensajesServidor::Response { operation, result, extra } => {
-
             return match_response(operation, result, extra);
-            // let xtra: String = match extra {
-            //     Some(e) => e,
-            //     None => "".to_string(),
-            // };
-            // return format!("OPERACIÓN: {0}, RESULTADO: {1}, {2}.", operation, result, xtra);
         }
         MensajesServidor::NewUser { username } => {
             let usr: String = username.0.bold().to_string();
@@ -84,7 +91,19 @@ pub fn representa_info(mensaje_server: MensajesServidor) -> String {
     }
 }
 
-//función que determina que tipo de response recibe del usuario.
+/// Genera una representación en texto (formateada y con estilos)
+/// de un mensaje proveniente del servidor.
+///
+/// # Descripción
+/// - Convierte un `MensajesServidor` en un `String` listo para mostrarse en consola.
+/// - Aplica formato y colores dependiendo del tipo de mensaje.
+/// - Centraliza toda la lógica de presentación del cliente.
+///
+/// # Parámetros
+/// - `mensaje_server`: mensaje recibido del servidor.
+///
+/// # Regresa
+/// Un `String` formateado que representa el mensaje.
 fn match_response(operation: String, result: String, extra: Option<String>) -> String {
     match operation.as_str() {
         "IDENTIFY" => {
@@ -190,8 +209,5 @@ fn match_response(operation: String, result: String, extra: Option<String>) -> S
             return "".to_string();
         }
     }
-           
 }
-
-
 

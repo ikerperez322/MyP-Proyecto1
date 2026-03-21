@@ -1,9 +1,17 @@
 use std::collections::{LinkedList};
 use common::acciones_cliente::AccionCliente;
-// use common::nombres::NombreUsuario;
 use common::status::Status;
 
-//método que recibe la linea que ingreso el usuario (previamente verificada) y determina a que accion del cliente corresponde, regresa un struct indicando que accion quiere realizar el usuario
+/// Determina la acción que el cliente desea realizar a partir de una línea de entrada.
+///
+/// # Descripción
+/// - Recibe una línea de texto ingresada por el usuario.
+/// - Valida y separa la instrucción y sus argumentos.
+/// - Construye una instancia de `AccionCliente` correspondiente.
+///
+/// # Regresa
+/// Una variante (struct) de `AccionCliente` que representa la acción solicitada.
+/// Si ocurre algún error en la validación, retorna `AccionInvalida`.
 pub fn determinar_accion(linea: String) -> AccionCliente {
 
     let mut args: Vec<String> = Vec::new();
@@ -31,7 +39,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::Identificarse { nombre: (nombre.to_string()) };
-            // println!("Quieres identificarte.");
         },
         "cambiarestado" => {
             let nuevo_status: &str = match args.get(1) {
@@ -51,11 +58,9 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
             }else if status_normalizado == "away" {
                 accion_struct = AccionCliente::CambiarEstado { nuevo_status: (Status::AWAY) };
             }
-            // println!("Quieres cambiar de estado.");
         },
         "listausuarios" => {
             accion_struct = AccionCliente::PedirListaUsuarios {  };
-            // println!("Quieres la lista de usuarios.");
         },
         "textoprivado" => {
             let destinatario: &str = match args.get(1) {
@@ -70,7 +75,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 texto: (texto.to_string()),
                 destinatario: (destinatario.to_string())
             };
-            // println!("Quieres mandar un texto privado.");
         },
         "textopublico" => {
             let texto: &str = match args.get(1) {
@@ -78,7 +82,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::MandaTextoPublico { texto: (texto.to_string()) };
-            // println!("Quieres mandar un texto público.");
         },
         "creacuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -86,7 +89,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::CreaCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            // println!("Quieres crear un cuarto.");
         },
         //-------------------ARREGLAR ESTE CASO---------------------------------------------
         "invitacuarto" => {
@@ -105,7 +107,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 nombre_cuarto: (nombre_cuarto.to_string()),
                 usuarios: (nombres_usuarios),
             };
-            // println!("Quieres invitar gente a un cuarto.");
         },
         "unirsecuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -113,7 +114,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::UnirseCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            // println!("Quieres unirte a un cuarto.");
         },
         "usuarioscuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -121,7 +121,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::PedirUsuariosCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            // println!("Quieres obtener la lista de usuarios del cuarto.");
         },
         "textocuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -133,7 +132,6 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::MandaTextoCuarto { nombre_cuarto: (nombre_cuarto.to_string()), texto: (texto.to_string()) };
-            // println!("Quieres mandar un mensaje al cuarto.");
         },
         "abandonacuarto" => {
             let nombre_cuarto: &str = match args.get(1) {
@@ -141,22 +139,35 @@ pub fn determinar_accion(linea: String) -> AccionCliente {
                 None => "",
             };
             accion_struct = AccionCliente::AbandonaCuarto { nombre_cuarto: (nombre_cuarto.to_string()) };
-            // println!("Quieres abandonar el cuarto.");
         },
         "desconectarse" => {
             accion_struct = AccionCliente::Desconectarse {  };
-            // println!("Quieres desconectarte.");
         },
         _ => {
             accion_struct = AccionCliente::AccionInvalida {  };
-            // println!("Pusiste una acción inválida.");
         },
     }
     return accion_struct;
 }
 
-
-//funcion que verifica que lo que ingreso el usuario sea válido
+/// Verifica y procesa la línea ingresada por el usuario.
+///
+/// # Descripción
+/// - Divide la línea en instrucción y argumentos.
+/// - Valida que la instrucción sea correcta.
+/// - Verifica que los argumentos correspondan a dicha instrucción.
+/// - Normaliza y organiza los datos en un vector.
+///
+/// # Regresa
+/// Un `Vec<String>` donde:
+/// - El primer elemento es la instrucción.
+/// - Los siguientes elementos son los argumentos procesados.
+///
+/// # Errores
+/// Regresa un error si:
+/// - No se encuentra una instrucción.
+/// - La instrucción es inválida.
+/// - Los argumentos no cumplen con el formato esperado.
 fn verifica_linea(linea: String) -> Result<Vec<String>, Box<dyn std::error::Error>> {
 
     let palabras: Vec<&str> = linea.splitn(3, ' ').collect();
@@ -180,7 +191,6 @@ fn verifica_linea(linea: String) -> Result<Vec<String>, Box<dyn std::error::Erro
     let mut args: Vec<String> = Vec::new();
     
     if instruccion == "listausuarios" || instruccion == "desconectarse" {
-        //no mandar llamar a la función porque no reciben argumentos esas instrucciones
 
         //dividimos en 2 en el caso de que sea un texto público para que todo lo que venga después de la instrucción lo tome como argumento
     }else if instruccion == "textopublico" {
@@ -225,7 +235,24 @@ fn verifica_linea(linea: String) -> Result<Vec<String>, Box<dyn std::error::Erro
     return Ok(instrucciones);
 }
 
-//función que verifica que la instrucción pasada (primer argumento de la linea de comandos) sea una acción válida (que exista) para el cliente
+/// Verifica y procesa la línea ingresada por el usuario.
+///
+/// # Descripción
+/// - Divide la línea en instrucción y argumentos.
+/// - Valida que la instrucción sea correcta.
+/// - Verifica que los argumentos correspondan a dicha instrucción.
+/// - Normaliza y organiza los datos en un vector.
+///
+/// # Regresa
+/// Un `Vec<String>` donde:
+/// - El primer elemento es la instrucción.
+/// - Los siguientes elementos son los argumentos procesados.
+///
+/// # Errores
+/// Regresa un error si:
+/// - No se encuentra una instrucción.
+/// - La instrucción es inválida.
+/// - Los argumentos no cumplen con el formato esperado.
 fn verifica_instruccion(linea: String) -> Result<String, Box<dyn std::error::Error>> {
 
     let accion_normalizado = linea.to_lowercase()
@@ -275,15 +302,29 @@ fn verifica_instruccion(linea: String) -> Result<String, Box<dyn std::error::Err
             return Ok("desconectarse".to_string());
         },
         _ => {
-            // return Ok("instruccion_invalida".to_string());
             return Err(String::from("Instrucción inválida.").into());
         }
     }
-    
 }
 
-
-//función que dado un vector con lo que paso el usuario (ya previamente validado que se trate de una instrucción valida), determina si contiene los argumentos que debe tener
+/// Verifica y procesa la línea ingresada por el usuario.
+///
+/// # Descripción
+/// - Divide la línea en instrucción y argumentos.
+/// - Valida que la instrucción sea correcta.
+/// - Verifica que los argumentos correspondan a dicha instrucción.
+/// - Normaliza y organiza los datos en un vector.
+///
+/// # Regresa
+/// Un `Vec<String>` donde:
+/// - El primer elemento es la instrucción.
+/// - Los siguientes elementos son los argumentos procesados.
+///
+/// # Errores
+/// Regresa un error si:
+/// - No se encuentra una instrucción.
+/// - La instrucción es inválida.
+/// - Los argumentos no cumplen con el formato esperado.
 fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<String>,Box<dyn std::error::Error>> {
 
     let mut argumentos: Vec<String> = Vec::new();
@@ -440,16 +481,24 @@ fn verifica_argumentos(args: Vec<&str>, instruccion: String) -> Result<Vec<Strin
                 None => Err(String::from("Se necesita el nombre de un cuarto.").into()),
             }
         },
-        // "desconectarse" => {
-        //     return Ok("desconectarse".to_string());
-        // },
         _ => return Err(String::from("Instrucción inválida.").into()),
     }
     
 }
 
-//función que recibe el segundo argumento de invitaCuarto y devuelve un vector cuyos elementos son los usernames de los usuarios a invitar
-//(toma en cuenta la separación por comas ',' por lo que todo lo que no esté separado por comas lo tomará como un único usuario)
+/// Extrae una lista de usuarios a partir de una cadena con formato de lista.
+///
+/// # Descripción
+/// - Espera una cadena con usuarios entre corchetes (`[ ]`).
+/// - Separa los elementos por comas.
+/// - Elimina espacios innecesarios.
+///
+/// # Regresa
+/// Un `Vec<String>` con los nombres de usuario.
+///
+/// # Errores
+/// Regresa un error si:
+/// - No se encuentran corchetes en la cadena.
 fn saca_usuarios(argumentos: String) -> Result<Vec<String>, Box<dyn std::error::Error>> {
 
     if !argumentos.contains('[') || !argumentos.contains(']') {
@@ -468,5 +517,3 @@ fn saca_usuarios(argumentos: String) -> Result<Vec<String>, Box<dyn std::error::
     
     return Ok(usernames);
 }
-
-

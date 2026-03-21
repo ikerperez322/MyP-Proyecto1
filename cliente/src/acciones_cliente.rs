@@ -1,21 +1,34 @@
 use std::collections::LinkedList;
-
-// use crate::mensajes_cliente;
 use common::protocolo::MensajesCliente;
 use common::maneja_json;
 use common::acciones_cliente::AccionCliente;
 use common::nombres::{NombreUsuario, NombreCuarto};
-// use common::status::Status;
 
+/// Convierte una acción del cliente (`AccionCliente`) en un mensaje JSON
+/// listo para ser enviado al servidor.
+///
+/// Esta función actúa como un traductor entre las acciones internas del cliente
+/// y la representación en JSON que entiende el servidor. Para cada variante
+/// de `AccionCliente`, se construye el mensaje correspondiente de tipo
+/// `MensajesCliente` y posteriormente se serializa.
+///
+/// # Parámetros
+/// - `accion`: Acción realizada por el cliente.
+///
+/// # Regresa
+/// - `Ok(String)`: Cadena JSON lista para enviarse al servidor.
+/// - `Err(...)`: Si ocurre un error durante la serialización o si la acción es inválida.
+///
+/// # Errores
+/// Regresa un  error si:
+/// - La acción es `AccionInvalida`.
+/// - Falla la conversión a JSON.
 pub fn accion_cliente(accion: AccionCliente) -> Result<String, Box<dyn std::error::Error>>{
 
     let json_struct: String;
     
     match accion {
         AccionCliente::Identificarse { nombre } => {
-            // let nombre: MensajesCliente = mensajes_cliente::identifica_cliente(&nombre);
-            // let json_struct: String = maneja_json::deserializa_json_cliente(nombre)?;    
-            // Ok(json_struct)
             json_struct = maneja_json::deserializa_json_cliente(MensajesCliente::Identify {
                 username: (NombreUsuario(nombre))
             })?;
@@ -96,6 +109,4 @@ pub fn accion_cliente(accion: AccionCliente) -> Result<String, Box<dyn std::erro
             return Err(String::from("Acción inválida").into());
         }
     }
-    
-    
 }
