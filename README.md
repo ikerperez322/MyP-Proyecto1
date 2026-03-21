@@ -46,7 +46,7 @@ docker run -p 1234:1234 servidor
 
 > Nota: 1234:1234 es un ejemplo esto se puede cambiar al puerto que sea.
 
-### Ejecutar el servidor:
+### Ejecutar el cliente:
 
 ```bash
 docker run -it cliente 172.17.0.1 1234
