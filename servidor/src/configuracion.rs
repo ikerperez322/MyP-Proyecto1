@@ -1,20 +1,30 @@
 use std::env;
 
+/// Representa la configuración del servidor.
+///
+/// Solo tiene el atributo de puerto para el valor por omisión.
 pub struct Configuracion {
     pub puerto: u16,
 }
 
 impl Configuracion {
 
-    //método constructor que determina el puerto 1234 por omisión
+    /// Representa la configuración del servidor.
     pub fn new() -> Configuracion {
         Self {
             puerto: 1234,
         }
     }
 
-    //intenta leer el puerto por la línea de comandos, en caso de encontrar algún error usa el que está definido por omisión en el constructor
+    /// Intenta construir la configuración a partir de los argumentos
+    /// de la línea de comandos.
+    ///
+    /// # Errores
+    /// Regresa un error si:
+    /// - No se proporciona un puerto como argumento.
+    /// - El puerto no es un número válido.
     pub fn lee_argumentos() -> Result<Configuracion, Box<dyn::std::error::Error>> {
+        
         let args: Vec<String> = env::args().collect();
 
         let puerto = match args.get(1) {
@@ -33,6 +43,5 @@ impl Configuracion {
 
         Ok(Configuracion { puerto: (puerto_numerico) })
         
-    }
-    
+    }    
 }

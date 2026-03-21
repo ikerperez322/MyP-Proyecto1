@@ -1,15 +1,25 @@
+use tokio::sync::RwLock;
+use tokio::sync::mpsc::Sender;
 use std::sync::Arc;
 use std::collections::{HashMap, HashSet};
 use common::nombres::NombreUsuario;
 use common::protocolo::{MensajesCliente, MensajesServidor};
 use common::status::Status;
-use tokio::sync::RwLock;
-use tokio::sync::mpsc::Sender;
 use crate::cuarto::Cuarto;
 use crate::evento_servidor::EventoChat;
 use crate::{estado_chat::EstadoChat, usuario::Usuario};
 
-//método que maneja cada posible mensaje que le puede llegar por parte del cliente
+/// Maneja los mensajes que recibe del cliente.
+///
+/// Dependiendo del tipo de mensaje (JSON) que reciba del cliente retorna determinado JSON, envía mensajes a los demás usuarios y maneja el estado del servidor (Esta función necesitaba una división en funciones más pequeñas que dividieran responsabilidades pero ya no dió tiempo).
+///
+/// # Parámetros
+/// - `mensaje_recibido`: referencia al struct MensajesCliente que contiene el json que recibió del usuario.
+/// - `estado`: estado compartido del servidor.
+/// - `usuario_actual`: referencia mutable al usuario que envío el mensaje actual.
+/// - `sender`: un canal de tokio para enviar eventos (mensajes) en el chat.
+///
+/// Devuelve `Some(MensajesServidor)` si la acción amerita una respuesta json del servidor al usuario actual, devuelve `None` en caso contrario.
 pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<EstadoChat>, usuario_actual: &mut Option<NombreUsuario>, sender: tokio::sync::mpsc::Sender<EventoChat>) -> Option<MensajesServidor> {
     
     match mensaje_recibido {
@@ -161,7 +171,6 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             let usuario = match usuario_actual {
                 Some(user) => user,
-                //arreglar esto
                 None => {
                     return Some(MensajesServidor::Response{
                         operation: ("INVALID".to_string()),
@@ -182,7 +191,6 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
             
             let usuario = match usuario_actual {
                 Some(user) => user,
-                //arreglar esto
                 None => {
                     return Some(MensajesServidor::Response{
                         operation: ("INVALID".to_string()),
@@ -464,7 +472,6 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
         MensajesCliente::RoomText { roomname, text } => {
             let usuario = match usuario_actual {
                 Some(user) => user,
-                //arreglar esto
                 None => {
                     return Some(MensajesServidor::Response{
                         operation: ("INVALID".to_string()),
@@ -477,7 +484,6 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
 
             let instancia_cuarto = match cuartos.get(&roomname) {
                 Some(crto) => Arc::clone(crto),
-                //de una vez checamos que el cuarto exista
                 None => return Some(MensajesServidor::Response {
                     operation: ("ROOM_TEXT".to_string()),
                     result: ("NO_SUCH_ROOM".to_string()),
@@ -652,12 +658,9 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                     };
 
                     let (usuarios_restantes, eliminar_cuarto) = {
-                        let mut cuarto_lock = instancia_cuarto.write().await;
-                        
-                        cuarto_lock.lista_usuarios.remove(&usuario);
-                        
-                        let es_vacio = cuarto_lock.lista_usuarios.is_empty();
-                        
+                        let mut cuarto_lock = instancia_cuarto.write().await;                        
+                        cuarto_lock.lista_usuarios.remove(&usuario);                        
+                        let es_vacio = cuarto_lock.lista_usuarios.is_empty();                        
                         (cuarto_lock.lista_usuarios.clone(), es_vacio)
                     };
 
@@ -704,15 +707,21 @@ pub async fn procesa_mensaje(mensaje_recibido: &MensajesCliente, estado: Arc<Est
                 MensajesServidor::Disconnected {
                     username: (usuario.clone()) },
                 estado.clone());
-
             
             return None;
         }
     }
-
 }
 
-//envia los mensajes a los demás usuarios conectados con tokio broadcast
+/// Envía los mensajes a los demás usuarios conectados con tokio broadcast.
+///
+/// Envía los mensajes (eventos) a todos los usuarios del chat excepto al autor. 
+///
+/// # Parámetros
+/// - `autor`: el usuario que ejecutó la acción (no recibe el mensaje).
+/// - `destino`: a donde va dirigido el mensaje.
+/// - `mensaje`: el mensaje que van a recibir los usuarios.
+/// - `estado`: estado compartido del servidor.
 fn envia_mensajes_secundarios_publicos(autor: NombreUsuario, destino: Option<NombreUsuario>, mensaje: MensajesServidor, estado: Arc<EstadoChat>) {
 
     let _ = estado.tx.send(EventoChat{
@@ -722,13 +731,20 @@ fn envia_mensajes_secundarios_publicos(autor: NombreUsuario, destino: Option<Nom
     });
 }
 
-//envia mensajes solo a un usuario previamente especificado (no a todos)
+/// Envía mensajes a los usuarios indicados.
+///
+/// Envía los mensajes (eventos) a los usuarios especificados (no a todos). 
+///
+/// # Parámetros
+/// - `autor`: el usuario que ejecutó la acción (no recibe el mensaje).
+/// - `destino`: a donde va dirigido el mensaje.
+/// - `mensaje`: el mensaje que van a recibir los usuarios.
+/// - `tx_destino`: canal para enviar el mensaje.
 async fn envia_mensajes_secundarios_privados(autor: NombreUsuario, destino: Option<NombreUsuario>, mensaje: MensajesServidor, tx_destino: Sender<EventoChat>) {
 
     let _ = tx_destino.send(EventoChat{
         autor: autor,
         destino: destino,
         mensaje: mensaje,
-    }).await;
-    
+    }).await;   
 }
