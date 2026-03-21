@@ -41,7 +41,7 @@ docker build -t cliente -f cliente/Dockerfile .
 ### Ejecutar el servidor:
 
 ```bash
-docker run --rm -p 1234:1234 servidor
+docker run -p 1234:1234 servidor
 ```
 
 > Nota: 1234:1234 es un ejemplo esto se puede cambiar al puerto que sea.
