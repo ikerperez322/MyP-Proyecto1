@@ -1,0 +1,13 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Introducción}{3}{section.1}%
+\contentsline {section}{\numberline {2}Objetivos}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Objetivo General}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Objetivos Específicos}{3}{subsection.2.2}%
+\contentsline {section}{\numberline {3}Tecnologías y Herramientas}{4}{section.3}%
+\contentsline {section}{\numberline {4}Diseño del Sistema}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Arquitectura General}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Servidor}{6}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Common}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Cliente}{8}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Dificultades con el lenguage}{9}{section.5}%
+\contentsline {section}{\numberline {6}Conclusión}{10}{section.6}%

@@ -1,0 +1,191 @@
+\documentclass[12pt]{article}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\title{Proyecto 1. Modelado y Programación. Reporte de Proyecto}
+\author{Pérez Pérez Iker Daniel}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%----------------------------------------
+\section{Introducción}
+
+El modelo cliente-servidor es una arquitectura donde múltiples clientes se conectan para intercambiar mensajes entre ellos. Por su parte el servidor procesa, almacena y distribuye los mensajes, mientras que el cliente gestiona la interfaz de usuario, garantizando comunicación continua y centralización de datos.
+
+En este contexto es donde entra el primer proyecto de la materia de Modelado y Programación, el cual justamente, consiste en implementar un sistema de chat tipo cliente-servidor con el protocolo de red TCP y un protocolo JSON predefinido para la comunicación entre clientes y servidor.
+
+Para lograr esto, se hizo uso del lenguage de Programación Rust, de JSON para los mensajes clientes/servidor, de cargo como sistema de construcción, de docker como herramienta de desarrollo y se utilizaron bibliotecas (crates) del lenguage tales como Tokio para el uso de sockets. A su vez se hizo uso de características avanzadas del lenguage tales como la programación asíncrona.
+
+El presente documento describe el diseño, implementación y resultados del sistema desarrollado, así como las decisiones tomadas durante el proceso y las posibles mejoras futuras.
+
+
+%----------------------------------------
+\section{Objetivos}
+
+\subsection{Objetivo General}
+El objetivo general del proyecto es implementar un sistema de chat tipo cliente/servidor que permita la comunicación entre múltiples usuarios en tiempo real. Las características que, de manera sintetizada, queremos que cumpla el sistema son: la capacidad de crear cuartos, distintos tipos de mensajes entre los usuarios, notificaciones por parte del servidor cada que pase algo relevante en el chat y la robustez del servidor para que jamás deje de funcionar. Para la interacción entre el usuario y el programa se quiere utilizar la interfaz de línea de comandos (CLI) por sus siglas en inglés donde mediante una serie de instrucciones el usuario sea capaz de realizar las diversas acciones deseadas.
+
+\subsection{Objetivos Específicos}
+\begin{itemize}
+    \item Diseñar la arquitectura del sistema tomando en cuenta el patrón de diseño MVC.
+    \item Implementar comunicación entre clientes y servidor mediante sockets con el protocolo TCP.
+    \item Manejar correctamente las múltiples conexiones simultáneas al servidor (concurrencia).
+    \item Desarrollar los algoritmos correspondientes para el envío y recepción de mensajes entre usuarios.
+    \item Hacer una vista que a pesar de estar en la (CLI) sea amigable y entendible para el usuario final.
+    \item Realizar tests del protocolo para verificar el correcto funcionamiento de la comunicación entre cliente y servidor.      
+\end{itemize}
+
+%----------------------------------------
+\section{Tecnologías y Herramientas}
+
+Para el desarrollo de este proyecto se utilizaron diversas tecnologías que ayudaron al cumplimiento de los objetivos impuestos.
+
+\begin{itemize}
+\item \textbf{Rust} es un lenguage de programación compilado, multiparadigma creado en el año 2010, el cual fue elegido para la implementación del sistema. Se eligió este lenguage de programación por varias razones. En primer lugar, es un lenguage de programación compilado lo que permite una correcta depuración de la aplicación antes de que sea utilizada por los usuarios, además de que su compilador es bastante amigable en el sentido de que en muchas ocasiones además de indicarte en que te equivocaste, te sugiere como podrías arreglar el error de compilación.
+  
+  En segundo lugar está el hecho de que es un lenguage de programación increíblemente rápido y eficiente diseñado para igualar el rendimiento de lenguages como C y C++, esto gracias a que a diferencia de lenguages como Java, Rust no cuenta con un sistema de recolección de basura para el manejo de la memoria. Sin embargo, tampoco hay necesidad de un manejo de memoria manual por parte del programador, sino que Rust usa un tercer enfoque utilizando un conjunto de reglas llamado ``Ownership", gracias a estas reglas, el programador no tiene la necesidad de tener que llevar el control de la memoria manualmente como en C, y tampoco tiene una penalización en cuanto a  rendimiento como en el caso de lenguages que sí implementan Recolector de Basura. Además, gracias a estas reglas Rust nos garantiza no tener errores como \texttt{NullPointerException} en Java, seguridad en concurrencia (parte fundamental del sistema a desarrollar) y además el manejo de todas los posibles errores del sistema (Rust no usa excepciones como otros lenguages) permitiendo que el Servidor sea prácticamente inmortal.
+
+  En tercer lugar está su gran cantidad de bibliotecas (crates) para casi cualquier cosa que se necesite al momento de desarrollar un proyecto de esta envergadura. En particular, para el manejo de sockets con el protocolo TCP cuenta con \texttt{Tokio} que utiliza programación asíncrona. Por otra parte, para el manejo de cadenas tipo JSON cuenta con el crate \texttt{Serde}, el cual facilita mucho la manipulación de cadenas reduciendo todo a crear structs con el contenido deseado, convertir esos structs en cadenas y posteriormente realizar el proceso inverso, todo esto para tener una manipulación de la información que contienen los mensajes a más alto nivel que estar parseando cadenas de texto.
+
+  Otro aspecto importante al momento de escoger el lenguage de programación a utilizar fue el Sistema de Construcción. En el caso de Rust cuenta (de manera casi nativa ya que se instala junto al lenguage) con Cargo, éste es un Sistema de Construcción bastante amigable desde el punto de vista que realiza varias cosas por ti. Por ejemplo al momento de crear un proyecto nuevo con el comando \texttt{cargo run} Cargo automáticamente se encarga de hacer una jerarquía de carpetas en tu proyecto, poniendo los archivos de compilación en la carpeta \texttt{/target}, también se encarga de inicializar un repositorio de git añadiendo al .gitgnore la carpeta antes mencionada. Otro punto a su favor son los archivos \texttt{Cargo.toml} los cuales se encargan de declarar todas las dependencias necesarias para la compilación del proyecto como es el caso de los crates, ahorrando la dificultad de tener que instalar manualmente los crates necesarios para el desarrollo del sistema, además de que estos archivos tienen una sintáxis bastante intuitiva que hace su uso mucho más sencillo.
+
+  Por último, pero no menos importante, está el hecho de que es un lenguage que desde hace mucho tiempo he querido aprender por todas las características antes mencionadas, por lo que el presente proyecto fue la oportunidad perfecta para aprenderlo ya que iba a utilizar tanto características básicas de cualquier lenguage de programación como las funciones hasta características mucho más avanzadas como es el caso de la programación asíncrona.
+
+\item \textbf{Tokio} se mencionó brevemente en el punto anterior, sin embargo vale la pena detenernos un poco en las bondades que ofrece este crate ya que junto a \texttt{Serde} es la parte medular de este proyecto. \texttt{Tokio} es un entorno de ejecución asíncrono para el lenguage de programación Rust, es destacado por su alto rendimiento, escalabilidad y fiabilidad en aplicaciones de red. Entre sus ventajas se encuentran por ejemplo, el hecho de que permite escribir código asíncrono que aprovecha al máximo el CPU del sistema mediante un scheduler multiproceso idal para redes de alta concurrencia. Otro de sus beneficios es la eficiencia en recursos, ya que a diferencia de los hilos del sistema operativo, las tareas de Tokio son bastante ligeras, lo ayuda a reducir la sobrecarga del sistema.
+  
+\item \textbf{Serde} al igual que \texttt{Tokio} vale la pena mencionar algunos de sus beneficios que hicieron que se eligiera para manejar los JSON. \texttt{Serde} es la biblioteca más popular de Rust para serializar y deserializar estructuras de datos de forma eficiente y segura. Entre sus ventajas se encuentra, por ejemplo, el rendimiento y la eficiencia (como todo en Rust) ya que está diseñado para ser extremadamente rápido, de manera que a menudo supera bibliotecas similares en otros lenguages. Otro punto a su favor es la abstracción y automatización con la que cuenta ya que utiliza macros de derivación para automatizar el código repetitivo que se tendría que escribir sin ello, además de que la manipulación de cadenas se vuelve basicamente acceder y modificar el contenido de los structs en los que \texttt{Serde} convierte las cadenas de texto JSON.
+
+  \item \textbf{Docker} es una plataforma de código abierto que permite empaquetar, distibuir y ejecutar aplicaciones dentro de los llamados contenedores ligeros y portátiles. Esta herramienta fue necesaria para poder ejecutar el sistema en distintas computadoras sin la necesidad de tener instalado el lenguage de programación Rust ni todas las dependencias necesarias, sino que, el contenedor ya incluía todo lo necesario para la correcta ejecución del programa. Por lo anterior fue fundamental para poder probar la aplicación en computadoras que no contaban con las dependencias necesarias, siendo útil a su vez para hacer pruebas entre servidor y clientes en distintas máquinas.
+  
+    \item \textbf{Git} es el sistema de control de versiones predilecto en nuestros días, además de que es gratuito y de código abierto, y es que no se desarrollar un proyecto de mediana dificultad como el que aquí se presenta sin contar con un sistema de control de versiones. En este caso en específico no hay mejor herramienta que Git ya que es bastante intuitivo pensar el desarrollo de software como una línea del tiempo, lo cual es justo lo que hace Git. Complementario a Git, también se utilizó GitHub como repositorio remoto ya que su interfaz es bastante amigable con el usuario y ofrece una mayor cantiddad de integraciones con herramientas de terceros, siendo una herramiente más sencilla de utilizar que por ejemplo GitLab.
+\end{itemize}
+
+%----------------------------------------
+\section{Diseño del Sistema}
+
+\subsection{Arquitectura General}
+
+El desarrollo del presente proyecto por su propia naturaleza requirió el patrón de arquitectura cliente-servidor. De esta manera, el servidor es el encargado de manejar las peticiones de todos los clientes conectados, el servidor, a su vez, sirve como punto de conexión para los mensajes que envían y reciben los clientes. Por lo anterior, fue necesario concebir el sistema como la unión de dos aplicaciones independientes que no dependen (en cuanto a código) una de otra para poder funcionar correctamente, bajo este enfoque, el sistema fue dividido en dos ejecutables: uno para el servidor y uno para el cliente, de esta manera el servidor puede funcionar sin la necesidad de que el cliente esté activo y el cliente se puede conectar a cualquier servidor que adopte el protocolo TCP, no exclusivamente al servidor de este sistema.
+
+También se necesitó el uso de un intermediario entre estas dos aplicaciones que tuviera todo el protocolo necesario del JSON para posibilitar la comunicación entre estos dos últimos programas, de manera que, se contó con una carpeta a manera de biblioteca llamado common donde se depositó todo lo necesario para el manejo de cadenas JSON y la lógica de alto nivel para que el servidor y el cliente pudieran entender este tipo de cadenas en forma de structs facilitando enormemente el desarrollo del sistema.
+
+\subsection{Servidor}
+
+El servidor es el corazón de este proyecto, por él pasan todos los mensajes que envían los clientes, maneja todo el estado del chat y determina cuando un usuario debe ser desconectado para seguir con el funcionamiento correcto del programa. El programa del servidor se divide en los siguientes módulos:
+
+\begin{itemize}
+
+\item \texttt{main.rs}. El punto de entrada del programa, a través de él se mandan llamar todos los algoritmos necesarios para el funcionamiento del servidor.
+
+\item \texttt{servidor.rs}. Abstrae el comportamiento del servidor atando el socket al localhost y un puerto elegido por el usuario o el 1234 por omisión y aceptando las conexiones de los clientes que van llegando y poniendo cada conexión en una tarea no bloqueante distinta de \texttt{Tokio}.
+
+\item \texttt{conexion.rs}. Es de los módulos más importantes, ya que lee y escribe en el socket para recibir los mensajes de los clientes y mandar respuestas, además de que gestiona los mensajes que le deben llegar a los demás usuarios por medio de un \texttt{Sender} quedando a la espera de eventos. Por otra parte válida que los mensajes de los usuarios en primer lugar sean JSON válidos y en segundo que sean acciones que los clientes tienen la capacidad de hacer.
+
+\item \texttt{\detokenize{evento_servidor.rs}}. Es el módulo encargado de encapsular la información necesaria para procesar y enviar los mensajes entre clientes ya sean públicos, privados o de cuartos. Permite pensar los mensajes a un alto nivel donde un mensaje tiene un remitente, destinatario y contenido del mensaje.
+
+\item \texttt{\detokenize{estado_chat.rs}}. Se encarga de representar a un alto nivel el estado global del chat. En este módulo el servidor lleva registro de los usuarios y cuartos existentes en el chat actualmente, además de asociarle a cada usuario un canal para posibilitar el envío de mensajes y notificaciones de eventos en la aplicación como el cambio de estado de algún usuario.
+
+\item \texttt{configuracion.rs}. Construye la configuración del servidor, es decir en que dirección y que puerto debería ejecutarse el servidor. En caso de que el usuario no proporcione ningún puerto, se utiliza el puerto 1234 por omisión.
+
+\item \texttt{cuarto.rs}. Representa el objeto cuarto dentro del chat. Incluye los atributos que debería de tener cualquier cuarto de chat, un nombre identificador para referirse al cuarto y una lista de usuarios del chat que pertenecen al cuarto, que viendo a la lista de usuarios como un conjunto para que no haya nombres de usuarios repetidos, se optó por utilizar un conjunto en lugar de una lista, además de mejorar notablemente la complejidad en tiempo de buscar un usuario en particular.
+
+\item \texttt{usuario.rs}. Es la representación de alto nivel de un usuario dentro del chat, como tal tiene un nombre identificativo (que el sistema impide que existan dos iguales). También contiene una variante de la enumeración \texttt{Status} representando los tres posibles estados en los que se puede encontrar el usuario. A su vez, contiene un conjunto de cuartos (conjunto ya que no debería ser posible pertenecer a cuartos repetidos) a los cuales el usuario pertenece, en esa misma dirección, el usuario también guarda las invitaciones a cuartos que ha recibido para evitar que un usuario reciba invitaciones a un mismo cuarto más de una vez, naturalmente cuando el usuario se une al cuarto al cual ha sido invitado, la invitación se elimina del conjunto.
+
+  \item \texttt{\detokenize{manejador_mensajes.rs}}. Es el corazón del servidor, ya que su función principal \texttt{\detokenize{procesa_mensaje}} se encarga de realizar las acciones pertinentes dependiendo de la acción que quiera realizar el usuario, esto incluye mandarle respuestas al usuario que realizó la petición con el grado de éxito que obtuvo la petición, también agrega y elimina usuarios y cuartos al estado del chat dependiendo de las acciones de los usuarios conectados, gestiona el envío de mensajes diferenciando mensajes públicos, privados y de cuartos dependiendo los deseos del usuario, se encarga de manejar las desconexiones del usuario, esto incluye notificar a los demás de la desconexión, eliminarlo de la lista de usuarios del chat y hacer que abandone todos los cuartos a los que se ha unido. Es muy probablemente el módulo más importante de todo el sistema ya que maneja absolutamente todo, por lo cual es con diferencia el archivo con mayor número de líneas de código.
+  
+\end{itemize}
+
+\subsection{Common}
+
+Common es la biblioteca que tiene toda la lógica necesaria para hacer posible la comunicación por medio de JSON entre usuarios y servidor, permite una comunicación a un alto nivel cambiando cadenas por structs, además contiene otras abstracciones que son necesarias que tengan cliente y servidor y para evitar código duplicado se eligió ponerlo aquí.
+
+\begin{itemize}
+
+\item \texttt{lib.rs}. Simplemente declara como públicos los módulos de la carpeta, ya que la carpeta se compila como biblioteca usa el nombre de lib en lugar de main a diferencia de cliente y servidor.
+
+\item \texttt{status.rs}. Enumeración con las tres posibles variantes del estado de un usuario.
+
+\item \texttt{\detokenize{maneja_json.rs}}. Maneja la serialización y deserialización de los mensajes de usuarios y servidor, es necesaria para poder realizar estas acciones de manera separada entre los mensajes que envía el cliente y los que envía el servidor ayudando a la legibilidad del código en otros lados del sistema sabiendo explícitamente con que tipo de mensaje estamos lidiando.
+
+\item \texttt{\detokenize{acciones_cliente.rs}}. Es la lista de acciones que puede realizar el usuario, se utiliza para validar instrucciones del lado del cliente y saber explícitamente que quiere realizar el usuario ayudando a la legibilidad del código.
+
+\item \texttt{nombres.rs}. Representa los nombres de usuario y nombres de cuarto para evitar que en un JSON que recibe el nombre de un cuarto se reciba el nombre de un usuario o cualquier otra cadena, evitando errores de tipos en este ámbito.
+
+\item \texttt{protocolo.rs}. El módulo más importante de este crate, representa en alto nivel todos los posibles JSON del protocolo en forma de structs. Se hace una clara diferenciación entre mensajes que envía el servidor y mensajes que envía el cliente para evitar que el servidor envíe mensajes de cliente o viceversa, esto evita muchos errores lógicos y hace mucho más explícito el tipo de mensaje con el que se está tratando. Cabe resaltar que se hace uso de macros como \texttt{rename} cambiando el nombre del struct a mayúscula para el momento en el que se vuelva cadena de texto o \texttt{tag} para evitar poner ese campo que comparten todas las structs, estas características son algunas de las bondades que ofrece el crate \texttt{Serde} al momento de trabajar con JSON, situación que fue fundamental para elegir el lenguage de programación.
+
+\end{itemize}
+
+\subsection{Cliente}
+
+El cliente prácticamente se encarga de validación de instrucciones que puede ingresar el cliente a través de la CLI, el embellecimiento de la terminal usando colores para mayor legibilidad de la interfaz y de atar el socket a la dirección y puerto donde está corriendo el servidor.
+
+\begin{itemize}
+
+\item \texttt{main.rs}. Punto de entrada para la aplicación del cliente, lee de los argumentos que se le pasan al programa al momento de ejecutarlo (ip y puerto del servidor) y lo pasa a la función que se encarga de ejecutar el cliente.
+
+\item \texttt{cliente.rs}. Módulo que abstrae el comportamiento del cliente atando el socket a la dirección donde se está ejecutando el servidor.
+
+\item \texttt{conexion.rs}. Se encarga de leer y escribir los mensajes al servidor, cabe resaltar que se usa \texttt{\detokenize{\n}} como delimitador de los mensajes.
+
+\item \texttt{configuracion.rs}. Establece los valores del puerto e ip del servidor para el socket del cliente, en primera instancia deberían ser valores pasados por el usuario al momento de ejecutar el programa, en caso de la auscencia de estos se usa el ip 127.0.0.1 y puerto 1234 como los valores por omisión.
+
+\item \texttt{\detokenize{vista_terminal.rs}}. Se encarga de darle una mejor vista al usuario utilizando colores para la CLI ayudando a la claridad visual al momento de visualizar mensajes, notificaciones y eventos.
+
+  \item \texttt{\detokenize{acciones_cliente.rs}}. Convierte las acciones que quiere realizar el cliente en mensajes JSON dirigidos al servidor se usa para una mayor legibilidad del código en la manipulación de acciones que realiza el cliente.
+  
+\item \texttt{\detokenize{maneja_argumentos.rs}}. Es el módulo más importante del cliente ya que se encarga de la validación de las cadenas que ingresa el usuario por medio de la entrada estándar clasificando cada instrucción junto a sus argumentos como un mensaje a enviar al servidor, extrae toda la información de la cadena de texto para ponerlo en el struct del mensaje, además rechaza cualquier acción que no sea válida o una instrucción con falta de argumentos haciendo imposible que el cliente pueda mandar un JSON inválido.
+  
+\end{itemize}
+
+%----------------------------------------
+\section{Dificultades con el lenguage}
+
+En esta sección se exploran algunas dificultades que se tuvo con el lenguage al momento del desarrollo del proyecto así como algunas de sus soluciones.
+
+\begin{itemize}
+
+\item El primer problema con el que me encontré fue la orientación del lenguage, y es que a diferencia de Java que es un lenguage de programación orientado a objetos, Rust es un lenguage multiparadigma que en efecto, soporta casi todas las características de la programación orientada a objetos exceptuando la herencia, sin embargo el mismo lenguage no recomienda pensar todo el código como un objeto a diferencia de Java, motivando en su lugar una combinación de programación estructurada al estilo de lenguages como C, con algunas características de lenguages funcionales como las closures. Por estas razones al principio fue un cambio muy fuerte de Java a Rust, no obstante con el paso del tiempo fue un cambio agradable ya que una de las características que no me gustaban de Java era la verbosidad del lenguage, y es que por ejemplo al momento de instanciar un objeto para utilizar únicamente uno de sus algoritmos una única vez se necesitaba una línea de alrededor de 80 caracteres, lo cual consideraba algo innecesario sobre todo porque eran objetos que se utilizaban una única vez, no siendo necesario construir toda una clase para un algoritmo tan simple. Por otra parte, Rust se recarga mucho en la practicidad al momento de escribir código, por ejemplo evitando la escritura de getters y setters prefiriendo en su lugar modificar directamente los atributos del struct. Otro ejemplo, es que rust no recomienda crear objetos para módulos que únicamente tienen una o dos funciones, prefiriendo en su lugar acceder directamente a la función del método sin la necesidad de instanciar un objeto.
+
+\item Otro problema que surgió al momento del desarrollo fueron las reglas de Ownership que utiliza Rust para sustituir al Recolector de Basura. Este aspecto del lenguage en particular fue bastante complicado de sobrellevar en un inicio ya que cosas tan simples en otros lenguages como pasar un argumento a una función en Rust se puede volver bastante complicado si no dominas bien los conceptos del Ownership, este tipo de problemas pueden derivar en mucho tiempo de pensar como refactorizar el código para pasar por ejemplo una referencia en lugar del valor verdadero. En esta misma línea el hecho de que Rust garantice que una variable siempre apunte a un valor válido en memoria evitando los \texttt{NullPointerException} de Java, tambíen hace relativamente tedioso el manejo de variables que no se inicializan al instante.
+
+\item Por último, pero no por ello menos importante, está el hecho de que Rust no tiene excepciones a diferencia de otros lenguages. En cambio, Rust utiliza la enumeracion Result como valor de regreso en funciones que pueden romper el programa, por lo cual en los puntos donde se manda llamar este tipo de funciones se está obligado a manejar los errores con expresiones de tipo \texttt{match} por lo que al momento de mandar llamar estas funciones al momento de asignar variables por ejemplo, se tienen que hacer cosas antiintuitivas que serían mucho más sencillas en otros lenguages.
+  
+  
+\end{itemize}
+
+Sin embargo, a pesar de todo lo anterior, Rust tiene este tipo de características priorizando el rendimiento sobre la facilidad al momento de escribir código, además de que estos problemas no son nada que no se resuelvan con práctica y teniendo claros los preceptos del Ownership. Por otra parte, las características antes mencionadas ayudan en gran medida a programar de una manera mucho más limpia y ordenada reduciendo en gran medida los errores, por ejemplo de concurrencia (clave en este proyecto) y lógicos que abundan en otros lenguages de programación. Con lo anterior casi se puede tener la seguridad de que cuando un programa compila en Rust, el programa será seguro en el aspecto de que no terminará por algún error en tiempo de ejecución.
+
+%----------------------------------------
+\section{Conclusión}
+
+En este proyecto se logró desarrollar un sistema de chat con el modelo cliente/servidor capaz de manejar múltiples conexiones simultáneas haciendo un buen uso de la concurrencia en Rust permitiendo la comunicación en tiempo real entre todos los usuarios conectados. Por su parte, la implementación usando programación asíncrona permitió un buen manejo de recursos.
+
+A lo largo del desarrollo de este proyecto se adquirieron conocimientos básicos de conceptos tales como la concurrencia, manejo de sockets, programación asíncrona y manejo de cadenas tipo JSON. Por otra parte, ha sido el primer proyecto donde el diseño del mismo ha cobrado gran importancia, teniendo que hacer una buena división de responsabilidades y modularización. También, ha sido la primera vez que se hace uso de Docker, y de un sistema de control de versiones y un repositorio remoto tales como Git y GitHub respectivamente. Simultáneamente, de nuevo, fue la primera vez en las que se consideró escribir tests para un correcto proceso de desarrollo basado en pruebas.
+
+Por otra parte, los puntos a mejorar son claros. Primero, está el diseño, y es que si bien, se dedicó una parte del tiempo al proceso de análisis y diseño, al final se hicieron varios cambios conforme iba avanzando la implementación, por lo que varios módulos tienen exceso de responsabilidades, claro ejemplo de esto es el módulo \texttt{\detokenize{manejador_mensajes.rs}} que prácticamente hace todo por parte del servidor lo cual explica porque es un archivo de más de 700 líneas de código. En segundo lugar, está el tema de los mensajes entre usuarios que si bien funcionan, al momento de abundantes mensajes dirigidos hacia el servidor al mismo tiempo, el servidor empieza a tener fallas en la lectura, esto ocasionado por que los canales no fueron implementados de la mejor manera en el servidor. En tercer lugar, está el tema de los test que claramente fueron muy deficientes para la cantidad de software que se escribió, reduciendoce a únicamente testear el protocolo, dejando aspectos como el manejo de peticiones del usuario a pruebas manuales. Por último, vale la pena mencionar el problema con el manejo de los tiempos, ya que muchas veces no se tuvo claro lo que se quería hacer al momento de querer programar las distintas funcionalidades por lo que se empezaba queriendo hacer algo y se terminaba en algo completamente distinto afectando en gran medida los tiempos planeados previamente.
+
+En conclusión, este proyecto deja un gran aprendizaje de varias tecnologías y herramientas como ya se expuso previamente. A lo anterior se le agregan los hechos de ser la primera vez que se desarrolloa un proyecto al mismo tiempo de estar aprendiendo un nuevo lenguage de programación, el ser la primera vez que se desarrolla un proyecto de esta envergadura, y de ser la primera vez en donde el diseño cobra gran relevancia. Por lo anterior, el actual proyecto senta las bases para el desarrollo de proyectos más complicados ya teniendo la experiencia de comenzar un proyecto implicando tantas cosas nuevas desde cero.
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: t
+%%% End:
